@@ -1,0 +1,44 @@
+{
+  "name": "iobroker.energy-bridge",
+  "version": "0.1.0",
+  "description": "EnergyBridge - Community multi-protocol adapter for integrating energy devices into ioBroker (Modbus TCP/RTU, MQTT, HTTP/JSON, UDP). Industrial templates intentionally excluded (e.g., TESVOLT Energy Manager, SMA Core1/STP125, industrial I/O modules, Alpitronic DC fast chargers).",
+  "main": "main.js",
+  "author": "Nexowatt",
+  "license": "MIT",
+  "keywords": [
+    "adapter",
+    "battery",
+    "bridge",
+    "energy",
+    "evcs",
+    "http",
+    "inverter",
+    "iobroker",
+    "meter",
+    "modbus",
+    "mqtt",
+    "pv",
+    "udp"
+  ],
+  "dependencies": {
+    "@iobroker/adapter-core": "^3.2.3",
+    "modbus-serial": "^8.0.16",
+    "mqtt": "^5.10.0",
+    "axios": "^1.7.2",
+    "serialport": "^12.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "npm run test:package && npm run test:unit && npm run test:integration",
+    "test:package": "npm pack --dry-run",
+    "test:unit": "mocha --exit test/unit.js",
+    "test:integration": "mocha --exit test/integration.js"
+  },
+  "devDependencies": {
+    "@iobroker/testing": "^4.2.0",
+    "mocha": "^10.2.0",
+    "chai": "^4.3.10"
+  }
+}

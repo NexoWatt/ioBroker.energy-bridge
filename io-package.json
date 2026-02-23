@@ -1,0 +1,93 @@
+{
+  "common": {
+    "name": "energy-bridge",
+    "version": "0.1.0",
+    "news": {
+      "0.1.0": {
+        "en": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
+        "de": "Erstveröffentlichung für die Community. Industrie‑Templates ausgeschlossen (TESVOLT, SMA Core1/STP125, Alpitronic, industrielle I/O)."
+      }
+    },
+    "title": "EnergyBridge",
+    "titleLang": {
+      "en": "EnergyBridge",
+      "de": "EnergyBridge"
+    },
+    "desc": {
+      "en": "EnergyBridge is a multi-protocol adapter (Modbus TCP/RTU, MQTT, HTTP/JSON, UDP) that integrates devices via templates (Categories → Manufacturer → Template) and auto-creates states in ioBroker.\n\nSupported (excerpt): PV inverters (Goodwe, SMA, Kostal, Solar-Log, SunSpec …), meters (Janitza, Socomec, Siemens, Eastron, Victron …), EV chargers / wallboxes (go-e, KEBA, ABL, openWB, Webasto, Mennekes …), battery/ESS (FENECON, FoxESS, Kostal, SolaX, Tesla …), heat (TECALOR, LAMBDA, myPV …), IO (Shelly, 1-Wire).\n\nIndustrial templates are intentionally excluded (e.g., TESVOLT, SMA Core1 / STP125, industrial I/O modules, Alpitronic DC fast chargers).",
+      "de": "EnergyBridge ist ein Multi‑Protokoll‑Adapter (Modbus TCP/RTU, MQTT, HTTP/JSON, UDP), der Geräte über Templates (Kategorien → Hersteller → Template) integriert und die States in ioBroker automatisch anlegt.\n\nUnterstützt (Auszug): PV‑Wechselrichter (Goodwe, SMA, Kostal, Solar‑Log, SunSpec …), Zähler (Janitza, Socomec, Siemens, Eastron, Victron …), Wallboxen (go‑e, KEBA, ABL, openWB, Webasto, Mennekes …), Speicher/ESS (FENECON, FoxESS, Kostal, SolaX, Tesla …), Wärme/Heizung (TECALOR, LAMBDA, myPV …), IO (Shelly, 1‑Wire).\n\nIndustrie‑Templates sind bewusst nicht enthalten (z.B. TESVOLT, SMA Core1 / STP125, industrielle I/O‑Module, Alpitronic DC‑Schnelllader)."
+    },
+    "authors": [
+      "Nexowatt"
+    ],
+    "license": "MIT",
+    "platform": "Javascript/Node.js",
+    "mode": "daemon",
+    "loglevel": "info",
+    "icon": "energy-bridge.svg",
+    "adminUI": {
+      "config": "materialize"
+    },
+    "keywords": [
+      "1-wire",
+      "battery",
+      "bridge",
+      "energy",
+      "evcs",
+      "http",
+      "inverter",
+      "meter",
+      "modbus",
+      "mqtt",
+      "pv",
+      "shelly",
+      "udp"
+    ],
+    "type": "energy",
+    "enabled": true,
+    "readme": "README.md",
+    "compact": true,
+    "connectionType": "local",
+    "dataSource": "poll",
+    "dependencies": [
+      {
+        "js-controller": ">=5.0.0"
+      },
+      {
+        "admin": ">=6.0.0"
+      }
+    ]
+  },
+  "native": {
+    "pollIntervalMs": 5000,
+    "modbusTimeoutMs": 2000,
+    "registerAddressOffset": 0,
+    "devicesJson": "[]"
+  },
+  "instanceObjects": [
+    {
+      "_id": "info",
+      "type": "channel",
+      "common": {
+        "name": "Information"
+      },
+      "native": {}
+    },
+    {
+      "_id": "info.connection",
+      "type": "state",
+      "common": {
+        "name": "Connected",
+        "type": "boolean",
+        "role": "indicator.connected",
+        "read": true,
+        "write": false,
+        "def": false
+      },
+      "native": {}
+    }
+  ],
+  "encryptedNative": [
+    "devicesJson"
+  ]
+}
