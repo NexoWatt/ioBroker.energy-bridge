@@ -3,6 +3,8 @@
 EnergyBridge is a **community multi-protocol device adapter** for ioBroker.  
 It integrates energy devices using built-in templates (**Category → Manufacturer → Template**) and automatically creates the required states in ioBroker.
 
+**Current version:** `0.1.0`
+
 **Supported protocols:**
 
 - **Modbus TCP**
@@ -29,8 +31,8 @@ This release focuses on typical **home/prosumer energy devices**.
 ## Requirements
 
 - **Node.js >= 18**
-- **ioBroker js-controller >= 5.0.0**
-- **ioBroker admin >= 6.0.0**
+- **ioBroker js-controller >= 6.0.11**
+- **ioBroker admin >= 7.6.17** (7.6.20 recommended)
 
 ## Changelog
 
@@ -329,5 +331,5 @@ Die Geräte werden intern als JSON gespeichert. Beispiel:
 
 ---
 
-## Lizenz
+## License
 MIT

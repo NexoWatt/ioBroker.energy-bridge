@@ -5,7 +5,16 @@
   "main": "main.js",
   "author": "Nexowatt",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NexoWatt/ioBroker.energy-bridge.git"
+  },
+  "bugs": {
+    "url": "https://github.com/NexoWatt/ioBroker.energy-bridge/issues"
+  },
+  "homepage": "https://github.com/NexoWatt/ioBroker.energy-bridge#readme",
   "keywords": [
+    "ioBroker",
     "adapter",
     "battery",
     "bridge",
@@ -19,6 +28,15 @@
     "mqtt",
     "pv",
     "udp"
+  ],
+  "files": [
+    "admin",
+    "lib",
+    "main.js",
+    "io-package.json",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
   ],
   "dependencies": {
     "@iobroker/adapter-core": "^3.2.3",
@@ -37,7 +55,7 @@
     "test:integration": "mocha --exit test/integration.js"
   },
   "devDependencies": {
-    "@iobroker/testing": "^4.2.0",
+    "@iobroker/testing": "^5.2.2",
     "mocha": "^10.2.0",
     "chai": "^4.3.10"
   }
