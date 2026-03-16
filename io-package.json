@@ -24,6 +24,7 @@
     "platform": "Javascript/Node.js",
     "mode": "daemon",
     "loglevel": "info",
+    "tier": 2,
     "icon": "energy-bridge.svg",
     "adminUI": {
       "config": "materialize"
