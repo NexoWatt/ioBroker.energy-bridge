@@ -20,7 +20,10 @@
     "authors": [
       "Nexowatt"
     ],
-    "license": "MIT",
+    "licenseInformation": {
+      "type": "free",
+      "license": "MIT"
+    },
     "platform": "Javascript/Node.js",
     "mode": "daemon",
     "loglevel": "info",
