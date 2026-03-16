@@ -29,9 +29,9 @@ Unterstützte Protokolle (abhängig vom Template): **Modbus TCP/RTU/ASCII**, **M
 - **IO / Sensorik:** Shelly, 1‑Wire (DS18B20)
 
 ## Voraussetzungen
-- **Node.js >= 18**
+- **Node.js >= 20**
 - **ioBroker js-controller >= 6.0.11**
-- **ioBroker admin >= 7.6.17**
+- **ioBroker admin >= 7.6.20**
 - Netzwerkzugriff auf die jeweiligen Geräte (IP/Port, ggf. Modbus Unit‑ID)
 
 ## Funktionen
@@ -69,9 +69,9 @@ Supported protocols (depending on the selected template): **Modbus TCP/RTU/ASCII
 - **IO / Sensors:** Shelly, 1‑Wire (DS18B20)
 
 ## Requirements
-- **Node.js >= 18**
+- **Node.js >= 20**
 - **ioBroker js-controller >= 6.0.11**
-- **ioBroker admin >= 7.6.17**
+- **ioBroker admin >= 7.6.20**
 - Network access to the devices (IP/port, and Modbus Unit ID if applicable)
 
 ## Features
@@ -98,6 +98,10 @@ It uses the libraries [modbus-serial](https://www.npmjs.com/package/modbus-seria
 ## Changelog
 ### **WORK IN PROGRESS**
 * (Nexowatt) - (nothing yet)
+
+### 0.1.3 (2026-03-16)
+* (Nexowatt) Repository-checker cleanup: Node.js >=20, update adapter-core, add missing translations, add protectedNative for encrypted config, update admin dependency, remove deprecated `common.title`
+
 
 ### 0.1.2 (2026-03-16)
 * (Nexowatt) Align repository metadata with NPM latest (0.1.2) and add missing `common.news` entry
