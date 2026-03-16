@@ -1,8 +1,12 @@
 {
   "common": {
     "name": "energy-bridge",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "news": {
+      "0.1.2": {
+        "en": "Maintenance release: align repository metadata with NPM latest (0.1.2).",
+        "de": "Wartungsrelease: Repo-Metadaten an NPM-Stand angleichen (0.1.2)."
+      },
       "0.1.1": {
         "en": "Repository-checker fixes and streamlined documentation. Added release-script setup for easier releases.",
         "de": "Repository-Checker-Fixes und gestraffte Dokumentation. Release-Script-Setup für einfachere Releases hinzugefügt."

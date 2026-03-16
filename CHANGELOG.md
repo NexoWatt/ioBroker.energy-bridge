@@ -9,6 +9,11 @@
 
 - (nothing yet)
 
+## 0.1.2 (2026-03-16)
+
+- Align repository metadata with NPM latest (0.1.2) and add missing `common.news` entry.
+- Update README to ioBroker standard format (badges, DE/EN description, changelog + full MIT license).
+
 ## 0.1.1 (2026-03-16)
 
 - Fix repository-checker compliance (version sync, `common.news`, README requirements).
