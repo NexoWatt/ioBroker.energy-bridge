@@ -1,30 +1,99 @@
 {
   "common": {
     "name": "energy-bridge",
-    "version": "0.1.0",
+    "version": "0.1.3",
     "news": {
+      "0.1.3": {
+        "en": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
+        "de": "Wartungsrelease: Metadaten an ioBroker-Empfehlungen anpassen (Node.js >=20, Abhängigkeiten aktualisiert, protectedNative, Übersetzungen).",
+        "ru": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
+        "pt": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
+        "nl": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
+        "fr": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
+        "it": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
+        "es": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
+        "pl": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
+        "uk": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
+        "zh-cn": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations)."
+      },
+      "0.1.2": {
+        "en": "Maintenance release: align repository metadata with NPM latest (0.1.2).",
+        "de": "Wartungsrelease: Repo-Metadaten an NPM-Stand angleichen (0.1.2).",
+        "ru": "Maintenance release: align repository metadata with NPM latest (0.1.2).",
+        "pt": "Maintenance release: align repository metadata with NPM latest (0.1.2).",
+        "nl": "Maintenance release: align repository metadata with NPM latest (0.1.2).",
+        "fr": "Maintenance release: align repository metadata with NPM latest (0.1.2).",
+        "it": "Maintenance release: align repository metadata with NPM latest (0.1.2).",
+        "es": "Maintenance release: align repository metadata with NPM latest (0.1.2).",
+        "pl": "Maintenance release: align repository metadata with NPM latest (0.1.2).",
+        "uk": "Maintenance release: align repository metadata with NPM latest (0.1.2).",
+        "zh-cn": "Maintenance release: align repository metadata with NPM latest (0.1.2)."
+      },
+      "0.1.1": {
+        "en": "Repository-checker fixes and streamlined documentation. Added release-script setup for easier releases.",
+        "de": "Repository-Checker-Fixes und gestraffte Dokumentation. Release-Script-Setup für einfachere Releases hinzugefügt.",
+        "ru": "Repository-checker fixes and streamlined documentation. Added release-script setup for easier releases.",
+        "pt": "Repository-checker fixes and streamlined documentation. Added release-script setup for easier releases.",
+        "nl": "Repository-checker fixes and streamlined documentation. Added release-script setup for easier releases.",
+        "fr": "Repository-checker fixes and streamlined documentation. Added release-script setup for easier releases.",
+        "it": "Repository-checker fixes and streamlined documentation. Added release-script setup for easier releases.",
+        "es": "Repository-checker fixes and streamlined documentation. Added release-script setup for easier releases.",
+        "pl": "Repository-checker fixes and streamlined documentation. Added release-script setup for easier releases.",
+        "uk": "Repository-checker fixes and streamlined documentation. Added release-script setup for easier releases.",
+        "zh-cn": "Repository-checker fixes and streamlined documentation. Added release-script setup for easier releases."
+      },
       "0.1.0": {
         "en": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
-        "de": "Erstveröffentlichung für die Community. Industrie‑Templates ausgeschlossen (TESVOLT, SMA Core1/STP125, Alpitronic, industrielle I/O)."
+        "de": "Erstveröffentlichung für die Community. Industrie‑Templates ausgeschlossen (TESVOLT, SMA Core1/STP125, Alpitronic, industrielle I/O).",
+        "ru": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
+        "pt": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
+        "nl": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
+        "fr": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
+        "it": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
+        "es": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
+        "pl": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
+        "uk": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
+        "zh-cn": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O)."
       }
     },
-    "title": "EnergyBridge",
     "titleLang": {
       "en": "EnergyBridge",
-      "de": "EnergyBridge"
+      "de": "EnergyBridge",
+      "ru": "EnergyBridge",
+      "pt": "EnergyBridge",
+      "nl": "EnergyBridge",
+      "fr": "EnergyBridge",
+      "it": "EnergyBridge",
+      "es": "EnergyBridge",
+      "pl": "EnergyBridge",
+      "uk": "EnergyBridge",
+      "zh-cn": "EnergyBridge"
     },
     "desc": {
       "en": "EnergyBridge is a multi-protocol adapter (Modbus TCP/RTU, MQTT, HTTP/JSON, UDP) that integrates devices via templates (Categories → Manufacturer → Template) and auto-creates states in ioBroker.\n\nSupported (excerpt): PV inverters (Goodwe, SMA, Kostal, Solar-Log, SunSpec …), meters (Janitza, Socomec, Siemens, Eastron, Victron …), EV chargers / wallboxes (go-e, KEBA, ABL, openWB, Webasto, Mennekes …), battery/ESS (FENECON, FoxESS, Kostal, SolaX, Tesla …), heat (TECALOR, LAMBDA, myPV …), IO (Shelly, 1-Wire).\n\nIndustrial templates are intentionally excluded (e.g., TESVOLT, SMA Core1 / STP125, industrial I/O modules, Alpitronic DC fast chargers).",
-      "de": "EnergyBridge ist ein Multi‑Protokoll‑Adapter (Modbus TCP/RTU, MQTT, HTTP/JSON, UDP), der Geräte über Templates (Kategorien → Hersteller → Template) integriert und die States in ioBroker automatisch anlegt.\n\nUnterstützt (Auszug): PV‑Wechselrichter (Goodwe, SMA, Kostal, Solar‑Log, SunSpec …), Zähler (Janitza, Socomec, Siemens, Eastron, Victron …), Wallboxen (go‑e, KEBA, ABL, openWB, Webasto, Mennekes …), Speicher/ESS (FENECON, FoxESS, Kostal, SolaX, Tesla …), Wärme/Heizung (TECALOR, LAMBDA, myPV …), IO (Shelly, 1‑Wire).\n\nIndustrie‑Templates sind bewusst nicht enthalten (z.B. TESVOLT, SMA Core1 / STP125, industrielle I/O‑Module, Alpitronic DC‑Schnelllader)."
+      "de": "EnergyBridge ist ein Multi‑Protokoll‑Adapter (Modbus TCP/RTU, MQTT, HTTP/JSON, UDP), der Geräte über Templates (Kategorien → Hersteller → Template) integriert und die States in ioBroker automatisch anlegt.\n\nUnterstützt (Auszug): PV‑Wechselrichter (Goodwe, SMA, Kostal, Solar‑Log, SunSpec …), Zähler (Janitza, Socomec, Siemens, Eastron, Victron …), Wallboxen (go‑e, KEBA, ABL, openWB, Webasto, Mennekes …), Speicher/ESS (FENECON, FoxESS, Kostal, SolaX, Tesla …), Wärme/Heizung (TECALOR, LAMBDA, myPV …), IO (Shelly, 1‑Wire).\n\nIndustrie‑Templates sind bewusst nicht enthalten (z.B. TESVOLT, SMA Core1 / STP125, industrielle I/O‑Module, Alpitronic DC‑Schnelllader).",
+      "ru": "EnergyBridge is a multi-protocol adapter (Modbus TCP/RTU, MQTT, HTTP/JSON, UDP) that integrates devices via templates (Categories → Manufacturer → Template) and auto-creates states in ioBroker.\n\nSupported (excerpt): PV inverters (Goodwe, SMA, Kostal, Solar-Log, SunSpec …), meters (Janitza, Socomec, Siemens, Eastron, Victron …), EV chargers / wallboxes (go-e, KEBA, ABL, openWB, Webasto, Mennekes …), battery/ESS (FENECON, FoxESS, Kostal, SolaX, Tesla …), heat (TECALOR, LAMBDA, myPV …), IO (Shelly, 1-Wire).\n\nIndustrial templates are intentionally excluded (e.g., TESVOLT, SMA Core1 / STP125, industrial I/O modules, Alpitronic DC fast chargers).",
+      "pt": "EnergyBridge is a multi-protocol adapter (Modbus TCP/RTU, MQTT, HTTP/JSON, UDP) that integrates devices via templates (Categories → Manufacturer → Template) and auto-creates states in ioBroker.\n\nSupported (excerpt): PV inverters (Goodwe, SMA, Kostal, Solar-Log, SunSpec …), meters (Janitza, Socomec, Siemens, Eastron, Victron …), EV chargers / wallboxes (go-e, KEBA, ABL, openWB, Webasto, Mennekes …), battery/ESS (FENECON, FoxESS, Kostal, SolaX, Tesla …), heat (TECALOR, LAMBDA, myPV …), IO (Shelly, 1-Wire).\n\nIndustrial templates are intentionally excluded (e.g., TESVOLT, SMA Core1 / STP125, industrial I/O modules, Alpitronic DC fast chargers).",
+      "nl": "EnergyBridge is a multi-protocol adapter (Modbus TCP/RTU, MQTT, HTTP/JSON, UDP) that integrates devices via templates (Categories → Manufacturer → Template) and auto-creates states in ioBroker.\n\nSupported (excerpt): PV inverters (Goodwe, SMA, Kostal, Solar-Log, SunSpec …), meters (Janitza, Socomec, Siemens, Eastron, Victron …), EV chargers / wallboxes (go-e, KEBA, ABL, openWB, Webasto, Mennekes …), battery/ESS (FENECON, FoxESS, Kostal, SolaX, Tesla …), heat (TECALOR, LAMBDA, myPV …), IO (Shelly, 1-Wire).\n\nIndustrial templates are intentionally excluded (e.g., TESVOLT, SMA Core1 / STP125, industrial I/O modules, Alpitronic DC fast chargers).",
+      "fr": "EnergyBridge is a multi-protocol adapter (Modbus TCP/RTU, MQTT, HTTP/JSON, UDP) that integrates devices via templates (Categories → Manufacturer → Template) and auto-creates states in ioBroker.\n\nSupported (excerpt): PV inverters (Goodwe, SMA, Kostal, Solar-Log, SunSpec …), meters (Janitza, Socomec, Siemens, Eastron, Victron …), EV chargers / wallboxes (go-e, KEBA, ABL, openWB, Webasto, Mennekes …), battery/ESS (FENECON, FoxESS, Kostal, SolaX, Tesla …), heat (TECALOR, LAMBDA, myPV …), IO (Shelly, 1-Wire).\n\nIndustrial templates are intentionally excluded (e.g., TESVOLT, SMA Core1 / STP125, industrial I/O modules, Alpitronic DC fast chargers).",
+      "it": "EnergyBridge is a multi-protocol adapter (Modbus TCP/RTU, MQTT, HTTP/JSON, UDP) that integrates devices via templates (Categories → Manufacturer → Template) and auto-creates states in ioBroker.\n\nSupported (excerpt): PV inverters (Goodwe, SMA, Kostal, Solar-Log, SunSpec …), meters (Janitza, Socomec, Siemens, Eastron, Victron …), EV chargers / wallboxes (go-e, KEBA, ABL, openWB, Webasto, Mennekes …), battery/ESS (FENECON, FoxESS, Kostal, SolaX, Tesla …), heat (TECALOR, LAMBDA, myPV …), IO (Shelly, 1-Wire).\n\nIndustrial templates are intentionally excluded (e.g., TESVOLT, SMA Core1 / STP125, industrial I/O modules, Alpitronic DC fast chargers).",
+      "es": "EnergyBridge is a multi-protocol adapter (Modbus TCP/RTU, MQTT, HTTP/JSON, UDP) that integrates devices via templates (Categories → Manufacturer → Template) and auto-creates states in ioBroker.\n\nSupported (excerpt): PV inverters (Goodwe, SMA, Kostal, Solar-Log, SunSpec …), meters (Janitza, Socomec, Siemens, Eastron, Victron …), EV chargers / wallboxes (go-e, KEBA, ABL, openWB, Webasto, Mennekes …), battery/ESS (FENECON, FoxESS, Kostal, SolaX, Tesla …), heat (TECALOR, LAMBDA, myPV …), IO (Shelly, 1-Wire).\n\nIndustrial templates are intentionally excluded (e.g., TESVOLT, SMA Core1 / STP125, industrial I/O modules, Alpitronic DC fast chargers).",
+      "pl": "EnergyBridge is a multi-protocol adapter (Modbus TCP/RTU, MQTT, HTTP/JSON, UDP) that integrates devices via templates (Categories → Manufacturer → Template) and auto-creates states in ioBroker.\n\nSupported (excerpt): PV inverters (Goodwe, SMA, Kostal, Solar-Log, SunSpec …), meters (Janitza, Socomec, Siemens, Eastron, Victron …), EV chargers / wallboxes (go-e, KEBA, ABL, openWB, Webasto, Mennekes …), battery/ESS (FENECON, FoxESS, Kostal, SolaX, Tesla …), heat (TECALOR, LAMBDA, myPV …), IO (Shelly, 1-Wire).\n\nIndustrial templates are intentionally excluded (e.g., TESVOLT, SMA Core1 / STP125, industrial I/O modules, Alpitronic DC fast chargers).",
+      "uk": "EnergyBridge is a multi-protocol adapter (Modbus TCP/RTU, MQTT, HTTP/JSON, UDP) that integrates devices via templates (Categories → Manufacturer → Template) and auto-creates states in ioBroker.\n\nSupported (excerpt): PV inverters (Goodwe, SMA, Kostal, Solar-Log, SunSpec …), meters (Janitza, Socomec, Siemens, Eastron, Victron …), EV chargers / wallboxes (go-e, KEBA, ABL, openWB, Webasto, Mennekes …), battery/ESS (FENECON, FoxESS, Kostal, SolaX, Tesla …), heat (TECALOR, LAMBDA, myPV …), IO (Shelly, 1-Wire).\n\nIndustrial templates are intentionally excluded (e.g., TESVOLT, SMA Core1 / STP125, industrial I/O modules, Alpitronic DC fast chargers).",
+      "zh-cn": "EnergyBridge is a multi-protocol adapter (Modbus TCP/RTU, MQTT, HTTP/JSON, UDP) that integrates devices via templates (Categories → Manufacturer → Template) and auto-creates states in ioBroker.\n\nSupported (excerpt): PV inverters (Goodwe, SMA, Kostal, Solar-Log, SunSpec …), meters (Janitza, Socomec, Siemens, Eastron, Victron …), EV chargers / wallboxes (go-e, KEBA, ABL, openWB, Webasto, Mennekes …), battery/ESS (FENECON, FoxESS, Kostal, SolaX, Tesla …), heat (TECALOR, LAMBDA, myPV …), IO (Shelly, 1-Wire).\n\nIndustrial templates are intentionally excluded (e.g., TESVOLT, SMA Core1 / STP125, industrial I/O modules, Alpitronic DC fast chargers)."
     },
     "authors": [
       "Nexowatt"
     ],
-    "license": "MIT",
+    "licenseInformation": {
+      "license": "MIT",
+      "type": "free"
+    },
     "platform": "Javascript/Node.js",
     "mode": "daemon",
     "loglevel": "info",
     "icon": "energy-bridge.svg",
+    "extIcon": "https://raw.githubusercontent.com/NexoWatt/ioBroker.energy-bridge/main/admin/energy-bridge.svg",
     "adminUI": {
       "config": "materialize"
     },
@@ -51,12 +120,15 @@
     "dataSource": "poll",
     "dependencies": [
       {
-        "js-controller": ">=5.0.0"
-      },
-      {
-        "admin": ">=6.0.0"
+        "js-controller": ">=6.0.11"
       }
-    ]
+    ],
+    "globalDependencies": [
+      {
+        "admin": ">=7.6.20"
+      }
+    ],
+    "tier": 2
   },
   "native": {
     "pollIntervalMs": 5000,
@@ -88,6 +160,9 @@
     }
   ],
   "encryptedNative": [
+    "devicesJson"
+  ],
+  "protectedNative": [
     "devicesJson"
   ]
 }
