@@ -1,0 +1,4 @@
+{
+  "root": true,
+  "extends": "@iobroker/eslint-config"
+}

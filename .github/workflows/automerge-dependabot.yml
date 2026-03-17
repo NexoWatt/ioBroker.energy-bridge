@@ -5,6 +5,7 @@
 name: Auto-Merge Dependabot PRs
 
 on:
+
   # Trigger when a PR is opened or updated
   # WARNING: This needs to be run in the PR base, DO NOT build untrusted code in this action
   pull_request_target:
@@ -20,6 +21,12 @@ jobs:
       contents: write
       pull-requests: write
       
+    if: github.actor == 'dependabot[bot]'
+
+    permissions:
+      contents: write
+      pull-requests: write
+
     steps:
       - name: Auto-merge Dependabot PRs
         uses: iobroker-bot-orga/action-automerge-dependabot@v1
@@ -33,3 +40,7 @@ jobs:
           # wait-for-checks: 'true'
           # Optional: Maximum time to wait for checks in seconds (default: 3600)
           # max-wait-time: '3600'
+          config-file-path: '.github/auto-merge.yml'
+          merge-method: 'merge'
+          wait-for-checks: 'true'
+          max-wait-time: '3600'
