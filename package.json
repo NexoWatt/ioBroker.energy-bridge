@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/NexoWatt/ioBroker.energy-bridge#readme",
   "keywords": [
-    "iobroker",
+    "ioBroker",
     "adapter",
     "energy",
     "bridge",
@@ -52,6 +52,8 @@
     "test:package": "npm pack --dry-run",
     "test:unit": "node test/unit.js",
     "test:integration": "node test/integration.js",
+    "lint": "eslint \"main.js\" \"lib/**/*.js\" \"admin/**/*.js\" \"test/**/*.js\"",
+    "check": "npm run lint && npm test",
     "release": "release-script"
   },
   "devDependencies": {
@@ -59,6 +61,9 @@
     "@alcalzone/release-script-plugin-iobroker": "^5.1.2",
     "@alcalzone/release-script-plugin-license": "^5.1.1",
     "@alcalzone/release-script-plugin-manual-review": "^5.1.1",
+    "@iobroker/adapter-dev": "^1.0.0",
+    "@iobroker/eslint-config": "^1.0.0",
+    "eslint": "^8.57.0",
     "@iobroker/testing": "^5.2.2"
   }
 }
