@@ -86,6 +86,9 @@
       "Nexowatt"
     ],
     "licenseInformation": {
+      "type": "free",
+      "license": "MIT"
+=======
       "license": "MIT",
       "type": "free"
     },
