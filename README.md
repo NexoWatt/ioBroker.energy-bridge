@@ -99,9 +99,6 @@ It uses the libraries [modbus-serial](https://www.npmjs.com/package/modbus-seria
 ### **WORK IN PROGRESS**
 * (Nexowatt) - (nothing yet)
 
-### 0.1.4 (2026-03-17)
-* (NexoWatt) Maintenance release
-
 ### 0.1.3 (2026-03-16)
 * (Nexowatt) Repository-checker cleanup: Node.js >=20, update adapter-core, add missing translations, add protectedNative for encrypted config, update admin dependency, remove deprecated `common.title`
 * (Nexowatt) Dev tooling: add ESLint config + recommended VS Code JSON schemas, add adapter-dev

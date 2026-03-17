@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "energy-bridge",
-    "version": "0.1.4",
+    "version": "0.1.3",
     "news": {
       "0.1.3": {
         "en": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
@@ -54,19 +54,6 @@
         "pl": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
         "uk": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
         "zh-cn": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O)."
-      },
-      "0.1.4": {
-        "en": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
-        "de": "Wartungsrelease: Metadaten an ioBroker-Empfehlungen anpassen (Node.js >=20, Abhängigkeiten aktualisiert, protectedNative, Übersetzungen).",
-        "ru": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
-        "pt": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
-        "nl": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
-        "fr": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
-        "it": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
-        "es": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
-        "pl": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
-        "uk": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
-        "zh-cn": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations)."
       }
     },
     "titleLang": {
@@ -101,6 +88,7 @@
     "licenseInformation": {
       "type": "free",
       "license": "MIT"
+  
     },
     "platform": "Javascript/Node.js",
     "mode": "daemon",
@@ -141,7 +129,8 @@
       {
         "admin": ">=7.6.20"
       }
-    ]
+    ],
+    "tier": 2
   },
   "native": {
     "pollIntervalMs": 5000,
