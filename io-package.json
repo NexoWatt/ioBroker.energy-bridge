@@ -92,6 +92,7 @@
     "platform": "Javascript/Node.js",
     "mode": "daemon",
     "loglevel": "info",
+    "tier": 2,
     "icon": "energy-bridge.svg",
     "extIcon": "https://raw.githubusercontent.com/NexoWatt/ioBroker.energy-bridge/main/admin/energy-bridge.svg",
     "adminUI": {
