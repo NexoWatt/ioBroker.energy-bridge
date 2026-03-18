@@ -1,13 +1,16 @@
 # Changelog
 
-<!--
-    Placeholder for the next version (at the beginning of the line):
-    ## **WORK IN PROGRESS**
--->
-
 ## **WORK IN PROGRESS**
 
 - (nothing yet)
+
+## 0.1.5 (2026-03-18)
+
+- Version bump and repository-checker maintenance updates.
+
+## 0.1.4 (2026-03-17)
+
+- Version sync (`package.json`/`io-package.json`) and add missing `common.news` entry for 0.1.4.
 
 ## 0.1.3 (2026-03-16)
 

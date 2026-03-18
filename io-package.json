@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "energy-bridge",
-    "version": "0.1.3",
+    "version": "0.1.5",
     "news": {
       "0.1.3": {
         "en": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
@@ -54,6 +54,32 @@
         "pl": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
         "uk": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
         "zh-cn": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O)."
+      },
+      "0.1.4": {
+        "en": "Maintenance release: synchronize versions (package.json/io-package.json) and update documentation for NPM latest.",
+        "de": "Wartungsrelease: Versionen (package.json/io-package.json) synchronisiert und Dokumentation für NPM latest aktualisiert.",
+        "ru": "Maintenance release: synchronize versions (package.json/io-package.json) and update documentation for NPM latest.",
+        "pt": "Maintenance release: synchronize versions (package.json/io-package.json) and update documentation for NPM latest.",
+        "nl": "Maintenance release: synchronize versions (package.json/io-package.json) and update documentation for NPM latest.",
+        "fr": "Maintenance release: synchronize versions (package.json/io-package.json) and update documentation for NPM latest.",
+        "it": "Maintenance release: synchronize versions (package.json/io-package.json) and update documentation for NPM latest.",
+        "es": "Maintenance release: synchronize versions (package.json/io-package.json) and update documentation for NPM latest.",
+        "pl": "Maintenance release: synchronize versions (package.json/io-package.json) and update documentation for NPM latest.",
+        "uk": "Maintenance release: synchronize versions (package.json/io-package.json) and update documentation for NPM latest.",
+        "zh-cn": "Maintenance release: synchronize versions (package.json/io-package.json) and update documentation for NPM latest."
+      },
+      "0.1.5": {
+        "en": "Maintenance release: version bump and repository-checker compliance updates.",
+        "de": "Wartungsrelease: Versionsanhebung und Repository-Checker-Konformität.",
+        "ru": "Maintenance release: version bump and repository-checker compliance updates.",
+        "pt": "Maintenance release: version bump and repository-checker compliance updates.",
+        "nl": "Maintenance release: version bump and repository-checker compliance updates.",
+        "fr": "Maintenance release: version bump and repository-checker compliance updates.",
+        "it": "Maintenance release: version bump and repository-checker compliance updates.",
+        "es": "Maintenance release: version bump and repository-checker compliance updates.",
+        "pl": "Maintenance release: version bump and repository-checker compliance updates.",
+        "uk": "Maintenance release: version bump and repository-checker compliance updates.",
+        "zh-cn": "Maintenance release: version bump and repository-checker compliance updates."
       }
     },
     "titleLang": {
@@ -88,7 +114,6 @@
     "licenseInformation": {
       "type": "free",
       "license": "MIT"
-  
     },
     "platform": "Javascript/Node.js",
     "mode": "daemon",
@@ -129,8 +154,7 @@
       {
         "admin": ">=7.6.20"
       }
-    ],
-    "tier": 2
+    ]
   },
   "native": {
     "pollIntervalMs": 5000,

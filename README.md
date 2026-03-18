@@ -92,12 +92,17 @@ Supported protocols (depending on the selected template): **Modbus TCP/RTU/ASCII
 
 It uses the libraries [modbus-serial](https://www.npmjs.com/package/modbus-serial), [mqtt](https://www.npmjs.com/package/mqtt) and [axios](https://www.npmjs.com/package/axios) to communicate with devices.
 
-<!--
-	### **WORK IN PROGRESS**
--->
 ## Changelog
 ### **WORK IN PROGRESS**
 * (Nexowatt) - (nothing yet)
+
+### 0.1.5 (2026-03-18)
+* (Nexowatt) Version bump and maintenance updates
+
+
+### 0.1.4 (2026-03-17)
+* (Nexowatt) Version sync (package.json/io-package.json) and add missing `common.news` entry for 0.1.4
+
 
 ### 0.1.3 (2026-03-16)
 * (Nexowatt) Repository-checker cleanup: Node.js >=20, update adapter-core, add missing translations, add protectedNative for encrypted config, update admin dependency, remove deprecated `common.title`
