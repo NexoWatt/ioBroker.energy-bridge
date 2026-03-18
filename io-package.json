@@ -1,7 +1,7 @@
 {
   "common": {
     "name": "energy-bridge",
-    "version": "0.1.5",
+    "version": "0.1.6",
     "news": {
       "0.1.3": {
         "en": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
@@ -80,6 +80,19 @@
         "pl": "Maintenance release: version bump and repository-checker compliance updates.",
         "uk": "Maintenance release: version bump and repository-checker compliance updates.",
         "zh-cn": "Maintenance release: version bump and repository-checker compliance updates."
+      },
+      "0.1.6": {
+        "en": "Documentation update: README is now English-only (repository-checker compliance).",
+        "de": "Dokumentationsupdate: README ist jetzt nur noch auf Englisch (Repository-Checker-Konformität).",
+        "ru": "Documentation update: README is now English-only (repository-checker compliance).",
+        "pt": "Documentation update: README is now English-only (repository-checker compliance).",
+        "nl": "Documentation update: README is now English-only (repository-checker compliance).",
+        "fr": "Documentation update: README is now English-only (repository-checker compliance).",
+        "it": "Documentation update: README is now English-only (repository-checker compliance).",
+        "es": "Documentation update: README is now English-only (repository-checker compliance).",
+        "pl": "Documentation update: README is now English-only (repository-checker compliance).",
+        "uk": "Documentation update: README is now English-only (repository-checker compliance).",
+        "zh-cn": "Documentation update: README is now English-only (repository-checker compliance)."
       }
     },
     "titleLang": {

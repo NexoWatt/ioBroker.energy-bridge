@@ -4,6 +4,11 @@
 
 - (nothing yet)
 
+## 0.1.6 (2026-03-18)
+
+- Documentation update: README is now English-only (repository-checker compliance).
+
+
 ## 0.1.5 (2026-03-18)
 
 - Version bump and repository-checker maintenance updates.
