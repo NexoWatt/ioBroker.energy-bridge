@@ -1,106 +1,105 @@
 {
+  "i18n": true,
   "type": "tabs",
   "items": {
     "general": {
       "type": "panel",
-      "label": {
-        "en": "General",
-        "de": "Allgemein"
-      },
+      "label": "General",
       "items": {
         "_alive": {
           "type": "alive",
+          "xs": 12,
           "sm": 12,
-          "textAlive": {
-            "en": "Instance is running",
-            "de": "Instanz läuft"
-          },
-          "textNotAlive": {
-            "en": "Instance is not running",
-            "de": "Instanz läuft nicht"
-          }
+          "md": 12,
+          "lg": 12,
+          "xl": 12,
+          "textAlive": "Instance is running",
+          "textNotAlive": "Instance is not running"
         },
         "connection": {
           "type": "state",
-          "label": {
-            "en": "Connection",
-            "de": "Verbindung"
-          },
+          "label": "Connection",
+          "xs": 12,
           "sm": 12,
+          "md": 6,
+          "lg": 6,
+          "xl": 6,
           "oid": "info.connection",
           "control": "switch",
           "readOnly": true
         },
         "pollIntervalMs": {
           "type": "number",
-          "label": {
-            "en": "Poll interval (ms)",
-            "de": "Abfrageintervall (ms)"
-          },
-          "sm": 6,
+          "label": "Poll interval (ms)",
+          "xs": 12,
+          "sm": 12,
+          "md": 6,
+          "lg": 6,
+          "xl": 6,
           "min": 1000,
           "max": 600000,
           "step": 100
         },
         "modbusTimeoutMs": {
           "type": "number",
-          "label": {
-            "en": "Modbus timeout (ms)",
-            "de": "Modbus Timeout (ms)"
-          },
-          "sm": 6,
+          "label": "Modbus timeout (ms)",
+          "xs": 12,
+          "sm": 12,
+          "md": 6,
+          "lg": 6,
+          "xl": 6,
           "min": 200,
           "max": 60000,
           "step": 100
         },
         "registerAddressOffset": {
           "type": "number",
-          "label": {
-            "en": "Register address offset",
-            "de": "Register-Adress-Offset"
-          },
-          "sm": 6,
+          "label": "Register address offset",
+          "xs": 12,
+          "sm": 12,
+          "md": 6,
+          "lg": 6,
+          "xl": 6,
           "min": -10000,
           "max": 10000,
           "step": 1
         },
         "_note": {
           "type": "staticText",
+          "xs": 12,
           "sm": 12,
+          "md": 12,
+          "lg": 12,
+          "xl": 12,
           "newLine": true,
-          "text": {
-            "en": "Device definitions are configured in the Devices tab.",
-            "de": "Geräte-Definitionen werden im Tab „Devices“ konfiguriert."
-          }
+          "text": "Device definitions are configured in the Devices tab."
         }
       }
     },
     "devices": {
       "type": "panel",
-      "label": {
-        "en": "Devices",
-        "de": "Geräte"
-      },
+      "label": "Devices",
       "items": {
         "devicesJson": {
           "type": "jsonEditor",
-          "label": {
-            "en": "Devices configuration (JSON)",
-            "de": "Gerätekonfiguration (JSON)"
-          },
+          "label": "Devices configuration (JSON)",
+          "xs": 12,
           "sm": 12,
+          "md": 12,
+          "lg": 12,
+          "xl": 12,
           "validateJson": true,
-          "allowEmpty": true,
-          "doNotApplyWithError": true
+          "allowEmpty": true
         },
         "_devicesHelp": {
           "type": "staticText",
+          "xs": 12,
           "sm": 12,
+          "md": 12,
+          "lg": 12,
+          "xl": 12,
           "newLine": true,
-          "text": {
-            "en": "The value must be a JSON array (e.g. []). Add your device definitions in the editor.",
-            "de": "Der Wert muss ein JSON-Array sein (z. B. []). Füge deine Geräte-Definitionen im Editor hinzu."
-          }
+          "text": "The value must be a JSON array (e.g. []). Add your device definitions in the editor."
         }
       }
     }

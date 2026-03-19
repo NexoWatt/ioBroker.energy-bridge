@@ -5,7 +5,16 @@
     "news": {
       "0.1.7": {
         "en": "Switched configuration UI to Admin 5 JSON config (includes live status).",
-        "de": "Konfigurations-UI auf Admin-5 JSON-Config umgestellt (inkl. Live-Status)."
+        "de": "Konfigurations-UI auf Admin-5 JSON-Config umgestellt (inkl. Live-Status).",
+        "ru": "Switched configuration UI to Admin 5 JSON config (includes live status).",
+        "pt": "Switched configuration UI to Admin 5 JSON config (includes live status).",
+        "nl": "Switched configuration UI to Admin 5 JSON config (includes live status).",
+        "fr": "Switched configuration UI to Admin 5 JSON config (includes live status).",
+        "it": "Switched configuration UI to Admin 5 JSON config (includes live status).",
+        "es": "Switched configuration UI to Admin 5 JSON config (includes live status).",
+        "pl": "Switched configuration UI to Admin 5 JSON config (includes live status).",
+        "uk": "Switched configuration UI to Admin 5 JSON config (includes live status).",
+        "zh-cn": "Switched configuration UI to Admin 5 JSON config (includes live status)."
       },
       "0.1.6": {
         "en": "Documentation update: README is now English-only (repository-checker compliance).",
@@ -84,19 +93,6 @@
         "pl": "Repository-checker fixes and streamlined documentation. Added release-script setup for easier releases.",
         "uk": "Repository-checker fixes and streamlined documentation. Added release-script setup for easier releases.",
         "zh-cn": "Repository-checker fixes and streamlined documentation. Added release-script setup for easier releases."
-      },
-      "0.1.0": {
-        "en": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
-        "de": "Erstveröffentlichung für die Community. Industrie‑Templates ausgeschlossen (TESVOLT, SMA Core1/STP125, Alpitronic, industrielle I/O).",
-        "ru": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
-        "pt": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
-        "nl": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
-        "fr": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
-        "it": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
-        "es": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
-        "pl": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
-        "uk": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O).",
-        "zh-cn": "Initial community release. Industrial templates excluded (TESVOLT, SMA Core1/STP125, Alpitronic, industrial I/O)."
       }
     },
     "titleLang": {
