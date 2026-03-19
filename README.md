@@ -56,6 +56,15 @@ It uses the libraries [modbus-serial](https://www.npmjs.com/package/modbus-seria
 
 ## Changelog
 
+
+### 0.1.9 (2026-03-19)
+
+- (Nexowatt) Fix: add missing Admin i18n translation files and JSON config layout sizes (repository-checker compliance).
+
+### 0.1.8 (2026-03-19)
+
+- (Nexowatt) Maintenance: JSON config improvements and repository-checker fixes.
+
 ### 0.1.7 (2026-03-19)
 
 - (Nexowatt) Switch configuration UI to Admin 5 JSON config and show live instance status.
