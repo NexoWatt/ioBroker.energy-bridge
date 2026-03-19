@@ -1,0 +1,108 @@
+{
+  "type": "tabs",
+  "items": {
+    "general": {
+      "type": "panel",
+      "label": {
+        "en": "General",
+        "de": "Allgemein"
+      },
+      "items": {
+        "_alive": {
+          "type": "alive",
+          "sm": 12,
+          "textAlive": {
+            "en": "Instance is running",
+            "de": "Instanz läuft"
+          },
+          "textNotAlive": {
+            "en": "Instance is not running",
+            "de": "Instanz läuft nicht"
+          }
+        },
+        "connection": {
+          "type": "state",
+          "label": {
+            "en": "Connection",
+            "de": "Verbindung"
+          },
+          "sm": 12,
+          "oid": "info.connection",
+          "control": "switch",
+          "readOnly": true
+        },
+        "pollIntervalMs": {
+          "type": "number",
+          "label": {
+            "en": "Poll interval (ms)",
+            "de": "Abfrageintervall (ms)"
+          },
+          "sm": 6,
+          "min": 1000,
+          "max": 600000,
+          "step": 100
+        },
+        "modbusTimeoutMs": {
+          "type": "number",
+          "label": {
+            "en": "Modbus timeout (ms)",
+            "de": "Modbus Timeout (ms)"
+          },
+          "sm": 6,
+          "min": 200,
+          "max": 60000,
+          "step": 100
+        },
+        "registerAddressOffset": {
+          "type": "number",
+          "label": {
+            "en": "Register address offset",
+            "de": "Register-Adress-Offset"
+          },
+          "sm": 6,
+          "min": -10000,
+          "max": 10000,
+          "step": 1
+        },
+        "_note": {
+          "type": "staticText",
+          "sm": 12,
+          "newLine": true,
+          "text": {
+            "en": "Device definitions are configured in the Devices tab.",
+            "de": "Geräte-Definitionen werden im Tab „Devices“ konfiguriert."
+          }
+        }
+      }
+    },
+    "devices": {
+      "type": "panel",
+      "label": {
+        "en": "Devices",
+        "de": "Geräte"
+      },
+      "items": {
+        "devicesJson": {
+          "type": "jsonEditor",
+          "label": {
+            "en": "Devices configuration (JSON)",
+            "de": "Gerätekonfiguration (JSON)"
+          },
+          "sm": 12,
+          "validateJson": true,
+          "allowEmpty": true,
+          "doNotApplyWithError": true
+        },
+        "_devicesHelp": {
+          "type": "staticText",
+          "sm": 12,
+          "newLine": true,
+          "text": {
+            "en": "The value must be a JSON array (e.g. []). Add your device definitions in the editor.",
+            "de": "Der Wert muss ein JSON-Array sein (z. B. []). Füge deine Geräte-Definitionen im Editor hinzu."
+          }
+        }
+      }
+    }
+  }
+}

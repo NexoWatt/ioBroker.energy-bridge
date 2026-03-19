@@ -4,6 +4,10 @@
 
 - (nothing yet)
 
+## 0.1.7 (2026-03-19)
+
+- Switch configuration UI to Admin 5 JSON config and show live instance status.
+
 ## 0.1.6 (2026-03-18)
 
 - Documentation update: README is now English-only (repository-checker compliance).

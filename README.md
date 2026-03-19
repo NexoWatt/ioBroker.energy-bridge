@@ -22,7 +22,7 @@ For a German version of this documentation, see `README.de.md`.
 
 ## Implemented devices (overview)
 
-> The full list is available in the Admin UI: **Add device → Category / Manufacturer / Template**.
+> The list below is only a short overview. Template definitions are stored in `admin/templates.json`.
 
 - **PV inverters:** FoxESS, Goodwe, KACO, Kostal, SMA (STPxx‑50, STPxx‑US‑41, Sunny Tripower X), SolaX, Solar‑Log, SunSpec, Victron
 - **Meters:** Janitza, Socomec, Siemens, Eastron, ABB, Carlo Gavazzi, Victron, SunSpec, M‑Bus, …
@@ -42,8 +42,10 @@ For a German version of this documentation, see `README.de.md`.
 
 1. Install the adapter via the ioBroker adapter list.
 2. Create an instance and open its configuration in Admin UI.
-3. Add devices via templates and configure the connection settings depending on the template (for example host/port/unit ID for Modbus, broker/topic for MQTT, URL for HTTP/JSON).
-4. Adjust polling interval/timeouts as required.
+3. In the **General** tab, adjust polling interval/timeouts as required.
+4. In the **Devices** tab, maintain your device list in the **JSON editor** (`devicesJson`).
+
+**Tip:** Start with an empty array `[]` and add devices step-by-step. The adapter uses template definitions from `admin/templates.json`.
 
 ## Notes
 
@@ -53,6 +55,10 @@ For a German version of this documentation, see `README.de.md`.
 It uses the libraries [modbus-serial](https://www.npmjs.com/package/modbus-serial), [mqtt](https://www.npmjs.com/package/mqtt) and [axios](https://www.npmjs.com/package/axios) to communicate with devices.
 
 ## Changelog
+
+### 0.1.7 (2026-03-19)
+
+- (Nexowatt) Switch configuration UI to Admin 5 JSON config and show live instance status.
 
 ### 0.1.6 (2026-03-18)
 

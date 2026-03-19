@@ -36,7 +36,7 @@ async function autoFixAdminUI(adapter) {
   // "Cannot create property 'config' on string 'materialize'".
   //
   // This migration is safe: it only converts string -> { config: <string> } and does not change any other fields.
-  const patterns = ['system.host.*.adapter.*', 'system.adapter.*'];
+  const patterns = ['system.host.*.adapter.energy-bridge', 'system.adapter.energy-bridge'];
 
   for (const pattern of patterns) {
     let objs;
