@@ -928,7 +928,12 @@ function applySettingsToUI(settings) {
   $('#modbusTimeoutMs').val(settings.modbusTimeoutMs ?? 2000);
   $('#registerAddressOffset').val(settings.registerAddressOffset ?? 0);
 
-  const parsed = safeJsonParse(settings.devicesJson || '[]', []);
+  let parsed = [];
+  if (Array.isArray(settings.devicesJson)) {
+    parsed = settings.devicesJson;
+  } else if (typeof settings.devicesJson === 'string') {
+    parsed = safeJsonParse(settings.devicesJson || '[]', []);
+  }
   devices = Array.isArray(parsed) ? parsed : [];
 
   updateJsonPreview();

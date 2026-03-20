@@ -4,13 +4,14 @@
 
 - (nothing yet)
 
+## 0.1.10 (2026-03-20)
+
+- Admin UI: switch back to the device wizard (Materialize) so devices can be selected/edited again.
+
 ## 0.1.9 (2026-03-19)
 
 - (Nexowatt) Fix: add missing Admin i18n translation files and JSON config layout sizes (repository-checker compliance).
 
-## 0.1.8 (2026-03-19)
-
-- Maintenance: JSON config improvements and repository-checker fixes.
 
 ## 0.1.7 (2026-03-19)
 
