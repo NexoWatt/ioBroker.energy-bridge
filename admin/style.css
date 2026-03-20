@@ -316,3 +316,165 @@ code {
   background: var(--nexo-surface);
   border-top: 1px solid var(--nexo-border);
 }
+
+/* React admin UI helpers */
+.nexo-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.nexo-tab {
+  appearance: none;
+  border: 1px solid var(--nexo-border-strong);
+  background: transparent;
+  color: var(--nexo-text-muted);
+  padding: 6px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.nexo-tab.active {
+  color: var(--nexo-text);
+  border-color: var(--nexo-accent);
+}
+
+.nexo-card {
+  background: var(--nexo-surface);
+  border: 1px solid var(--nexo-border);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 12px 0;
+}
+
+.nexo-field {
+  margin: 10px 0;
+}
+
+.nexo-label {
+  display: block;
+  font-size: 12px;
+  color: var(--nexo-text-muted);
+  margin-bottom: 4px;
+}
+
+.nexo-help {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--nexo-text-muted);
+}
+
+.nexo-input,
+.nexo-select,
+.nexo-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--nexo-border);
+  background: var(--nexo-surface-2);
+  color: var(--nexo-text);
+  outline: none;
+}
+
+.nexo-input:focus,
+.nexo-select:focus,
+.nexo-textarea:focus {
+  border-color: var(--nexo-accent);
+}
+
+.nexo-checkbox input[type="checkbox"] {
+  position: static !important;
+  opacity: 1 !important;
+}
+
+.nexo-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.nexo-btn {
+  appearance: none;
+  border: 1px solid var(--nexo-border-strong);
+  background: transparent;
+  color: var(--nexo-text);
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.nexo-btn.primary {
+  border-color: var(--nexo-accent);
+}
+
+.nexo-btn.danger {
+  border-color: var(--nexo-danger);
+  color: var(--nexo-danger);
+}
+
+.nexo-muted {
+  color: var(--nexo-text-muted);
+}
+
+.nexo-divider {
+  height: 1px;
+  background: var(--nexo-border);
+  margin: 14px 0;
+}
+
+.nexo-error {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: var(--nexo-text);
+  padding: 10px 12px;
+  border-radius: 10px;
+  margin: 10px 0;
+}
+
+.nexo-hint {
+  color: var(--nexo-text-muted);
+  margin-bottom: 8px;
+}
+
+.nexo-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+}
+
+.nexo-modal {
+  width: min(920px, 100%);
+  max-height: 100%;
+  overflow: auto;
+  background: var(--nexo-surface);
+  border: 1px solid var(--nexo-border-strong);
+  border-radius: 14px;
+  padding: 16px 18px;
+}
+
+.nexo-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.nexo-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.nexo-icon {
+  width: 42px;
+  height: 42px;
+}

@@ -1,974 +1,1119 @@
-/* global $, M, translateAll */
-/**
- * energy-bridge - admin (materialize) UI
- * This UI is intentionally robust: it works even if Materialize-JS plugins are not available.
- */
-
+/* global React, ReactDOM, socket, systemDictionary, systemLang */
 'use strict';
 
-let templatesData = null;
-let templatesById = {};
-let categories = [];
-let manufacturersByCategory = {}; // cat -> [manu]
-let templatesByCatManu = {}; // cat -> manu -> [template]
-let devices = [];
-let editIndex = -1;
-let onChangeGlobal = null;
-let uiInitialized = false;
-let lastSuggestedId = '';
-let lastSuggestedName = '';
+(function () {
+  const h = React.createElement;
 
-let editExistingProtocol = null;
-let editExistingSecrets = { mqttPassword: undefined, httpPassword: undefined, writePassword: undefined };
-
-function categoryLabel(cat) {
-  const c = (cat || '').toString();
-  switch (c) {
-    case 'EVCS': return 'Wallbox / Ladestation (EVCS)';
-    case 'METER': return 'Zähler / Meter (METER)';
-    case 'ESS': return 'Energiespeicher (ESS)';
-    case 'PV_INVERTER': return 'PV-Wechselrichter (PV_INVERTER)';
-    case 'BATTERY': return 'Batterie (BATTERY)';
-    case 'BATTERY_INVERTER': return 'Batteriewechselrichter (BATTERY_INVERTER)';
-    case 'HEAT': return 'Heizung / Heizstab (HEAT)';
-    case 'EVSE': return 'EVSE / EVSE Controller (EVSE)';
-    case 'IO': return 'I/O (IO)';
-    case 'GENERIC': return 'Allgemein (GENERIC)';
-    default: return c;
+  function getLang() {
+    return (typeof window !== 'undefined' && (window.systemLang || systemLang)) || 'en';
   }
-}
 
-function idPrefixForCategory(cat) {
-  switch ((cat || '').toString()) {
-    case 'EVCS': return 'evcs';
-    case 'METER': return 'meter';
-    case 'ESS': return 'ess';
-    case 'PV_INVERTER': return 'pv';
-    case 'BATTERY': return 'battery';
-    case 'BATTERY_INVERTER': return 'batinv';
-    case 'HEAT': return 'heat';
-    case 'EVSE': return 'evse';
-    case 'IO': return 'io';
-    default:
-      return (cat || 'dev').toString().toLowerCase().replace(/[^a-z0-9]+/g, '').substring(0, 6) || 'dev';
-  }
-}
-
-function suggestDeviceId(cat) {
-  const prefix = idPrefixForCategory(cat);
-  const used = new Set((devices || []).map(d => (d && d.id ? String(d.id) : '')));
-  for (let i = 1; i < 1000; i++) {
-    const id = `${prefix}${i}`;
-    if (!used.has(id)) return id;
-  }
-  return `${prefix}${Date.now()}`;
-}
-
-function suggestDeviceName(templateId) {
-  const tpl = templatesById[templateId];
-  if (!tpl) return '';
-  const parts = [tpl.manufacturer, tpl.model, tpl.name].filter(Boolean);
-  return parts.join(' ').trim() || tpl.id || '';
-}
-
-function hasMaterialize() {
-  return typeof M !== 'undefined' && M && typeof M.Modal !== 'undefined';
-}
-
-function hasFormSelect() {
-  return !!($.fn && $.fn.formSelect);
-}
-
-function updateTextFields() {
-  if (hasMaterialize() && typeof M.updateTextFields === 'function') {
-    try { M.updateTextFields(); } catch (e) { /* ignore */ }
-  }
-}
-
-function toast(msg) {
-  const safe = (msg || '').toString();
-  if (hasMaterialize() && typeof M.toast === 'function') {
-    try { M.toast({ html: escapeHtml(safe) }); return; } catch (e) { /* ignore */ }
-  }
-  // fallback
-  try { alert(safe); } catch (e) { /* ignore */ }
-}
-
-function escapeHtml(str) {
-  return (str || '').toString()
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
-
-function safeJsonParse(str, fallback) {
-  try {
-    return JSON.parse(str);
-  } catch (e) {
-    return fallback;
-  }
-}
-
-function setChanged(changed) {
-  if (typeof onChangeGlobal === 'function') {
-    onChangeGlobal(changed);
-  }
-}
-
-function refreshSelect($sel) {
-  if (!$sel || !$sel.length) return;
-  // We use native selects (browser-default) for maximum compatibility.
-  // Never initialize Materialize formSelect on those, otherwise it hides the element.
-  if ($sel.hasClass('browser-default')) return;
-  if (hasFormSelect()) {
-    try { $sel.formSelect(); } catch (e) { /* ignore */ }
-  }
-}
-
-function openModal() {
-  const el = document.getElementById('modalDevice');
-  if (hasMaterialize()) {
+  function t(key) {
     try {
-      const inst = M.Modal.getInstance(el) || M.Modal.init(el, { dismissible: false });
-      inst.open();
-      return;
+      const lang = getLang();
+      if (typeof systemDictionary === 'object' && systemDictionary && systemDictionary[key]) {
+        return systemDictionary[key][lang] || systemDictionary[key].en || key;
+      }
     } catch (e) {
-      console.warn('Materialize modal open failed, falling back:', e);
+      // ignore
     }
+    return key;
   }
 
-  // fallback
-  $('#modalDevice').addClass('nexo-fallback nexo-open');
-  $('#nexoBackdrop').addClass('nexo-open').show();
-}
-
-function closeModal() {
-  const el = document.getElementById('modalDevice');
-  if (hasMaterialize()) {
+  function safeJsonParse(str, fallback) {
     try {
-      const inst = M.Modal.getInstance(el);
-      if (inst) inst.close();
-      return;
+      return JSON.parse(str);
     } catch (e) {
-      // ignore and fall back
+      return fallback;
     }
   }
-  $('#modalDevice').removeClass('nexo-open');
-  $('#nexoBackdrop').removeClass('nexo-open').hide();
-}
 
-function loadTemplates() {
-  return new Promise((resolve, reject) => {
-    if (templatesData) return resolve(templatesData);
-
-    // Cache-busting is important because Admin often keeps old adapter assets in browser cache.
-    $.getJSON(`templates.json?_=${Date.now()}`)
-      .done((data) => {
-        templatesData = data || {};
-        templatesById = {};
-        manufacturersByCategory = {};
-        templatesByCatManu = {};
-
-        const tpls = Array.isArray(templatesData.templates) ? templatesData.templates : [];
-        tpls.forEach((t) => {
-          if (!t || !t.id) return;
-          templatesById[t.id] = t;
-          const cat = t.category || 'OTHER';
-          const manu = t.manufacturer || 'Unknown';
-
-          manufacturersByCategory[cat] = manufacturersByCategory[cat] || new Set();
-          manufacturersByCategory[cat].add(manu);
-
-          templatesByCatManu[cat] = templatesByCatManu[cat] || {};
-          templatesByCatManu[cat][manu] = templatesByCatManu[cat][manu] || [];
-          templatesByCatManu[cat][manu].push(t);
-        });
-
-        // Prefer the most common categories first for usability.
-        const preferredOrder = ['EVCS', 'METER', 'ESS', 'PV_INVERTER', 'BATTERY', 'BATTERY_INVERTER', 'HEAT', 'IO', 'EVSE', 'GENERIC'];
-        categories = Object.keys(manufacturersByCategory).sort((a, b) => {
-          const ia = preferredOrder.indexOf(a);
-          const ib = preferredOrder.indexOf(b);
-          const wa = ia >= 0 ? ia : 999;
-          const wb = ib >= 0 ? ib : 999;
-          if (wa !== wb) return wa - wb;
-          return (a || '').localeCompare(b || '');
-        });
-
-        // Convert Sets to arrays
-        Object.keys(manufacturersByCategory).forEach((cat) => {
-          manufacturersByCategory[cat] = Array.from(manufacturersByCategory[cat]).sort((a, b) => (a || '').localeCompare(b || ''));
-        });
-
-        // UI hint: show how many driver templates were loaded.
-        try { $('#tplCount').text(String(tpls.length)); } catch (e) { /* ignore */ }
-
-        resolve(templatesData);
-      })
-      .fail((xhr, status, err) => {
-        console.error('Failed to load templates.json', status, err);
-        try { $('#tplCount').text('0'); } catch (e) { /* ignore */ }
-        reject(err || new Error('Failed to load templates.json'));
-      });
-  });
-}
-
-function summarizeConnection(d) {
-  const c = d.connection || {};
-  const hb = (d && d.heartbeatTimeoutMs !== undefined && d.heartbeatTimeoutMs !== null) ? Number(d.heartbeatTimeoutMs) : NaN;
-  const hbTxt = (Number.isFinite(hb) && hb > 0) ? `, hb ${Math.trunc(hb)}ms` : '';
-  if (d.protocol === 'modbusTcp') {
-    return `${c.host || ''}:${c.port || 502} (unit ${c.unitId ?? 1}${hbTxt})`;
-  }
-  if (d.protocol === 'modbusRtu' || d.protocol === 'modbusAscii') {
-    return `${c.path || ''} @${c.baudRate || 9600} (unit ${c.unitId ?? 1}${hbTxt})`;
-  }
-  if (d.protocol === 'mbus') {
-    return `${c.path || ''} @${c.baudRate || 2400} (addr ${c.unitId ?? 1}${hbTxt})`;
-  }
-  if (d.protocol === 'mqtt') {
-    return `${c.url || ''}${hbTxt ? (' (' + hbTxt.slice(2) + ')') : ''}`;
-  }
-  if (d.protocol === 'canbus') {
-    return `${c.interface || c.iface || c.canInterface || 'can0'}${hbTxt ? (' (' + hbTxt.slice(2) + ')') : ''}`;
-  }
-  if (d.protocol === 'http') {
-    return `${c.baseUrl || ''}${hbTxt ? (' (' + hbTxt.slice(2) + ')') : ''}`;
-  }
-  if (d.protocol === 'udp') {
-    return `${c.host || ''}:${c.port || 7090}${hbTxt ? (' (' + hbTxt.slice(2) + ')') : ''}`;
-  }
-  return '';
-}
-
-function renderDevicesTable() {
-  const tbody = $('#devicesTable tbody');
-  tbody.empty();
-
-  if (!devices || !devices.length) {
-    $('#noDevicesHint').show();
-    return;
-  }
-  $('#noDevicesHint').hide();
-
-  devices.forEach((d, idx) => {
-    const tpl = templatesById[d.templateId];
-    const tplName = tpl ? (tpl.name || tpl.id) : (d.templateId || '');
-
-    const connInfo = summarizeConnection(d);
-
-    const row = $(`
-      <tr>
-        <td>${d.enabled ? '✓' : ''}</td>
-        <td><code>${escapeHtml(d.id)}</code></td>
-        <td>${escapeHtml(d.name || '')}</td>
-        <td>${escapeHtml(d.category || '')}</td>
-        <td>${escapeHtml(tplName)}</td>
-        <td>${escapeHtml(d.protocol || '')}</td>
-        <td>${escapeHtml(connInfo)}</td>
-        <td class="actions">
-          <a href="#!" class="btn-small waves-effect" data-action="edit" data-idx="${idx}">${escapeHtml('Bearbeiten')}</a>
-          <a href="#!" class="btn-small red waves-effect" data-action="delete" data-idx="${idx}">${escapeHtml('Löschen')}</a>
-        </td>
-      </tr>
-    `);
-
-    tbody.append(row);
-  });
-}
-
-function fillCategorySelect() {
-  const sel = $('#dev_category');
-  sel.empty();
-  categories.forEach((cat) => sel.append(`<option value="${escapeHtml(cat)}">${escapeHtml(categoryLabel(cat))}</option>`));
-  refreshSelect(sel);
-}
-
-function fillManufacturerSelect(cat) {
-  const sel = $('#dev_manufacturer');
-  sel.empty();
-  const manus = manufacturersByCategory[cat] || [];
-  manus.forEach((m) => sel.append(`<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`));
-  refreshSelect(sel);
-}
-
-function fillTemplateSelect(cat, manu) {
-  const sel = $('#dev_template');
-  sel.empty();
-  const tpls = (templatesByCatManu[cat] && templatesByCatManu[cat][manu]) ? templatesByCatManu[cat][manu] : [];
-  tpls
-    .slice()
-    .sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id))
-    .forEach((t) => sel.append(`<option value="${escapeHtml(t.id)}">${escapeHtml(t.name || t.id)}</option>`));
-  refreshSelect(sel);
-}
-
-function fillProtocolSelect(templateId, currentProtocol) {
-  const sel = $('#dev_protocol');
-  sel.empty();
-
-  const tpl = templatesById[templateId];
-  const protos = (tpl && Array.isArray(tpl.protocols)) ? tpl.protocols : [];
-
-  protos.forEach((p) => sel.append(`<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`));
-  refreshSelect(sel);
-
-  if (currentProtocol && protos.includes(currentProtocol)) {
-    sel.val(currentProtocol);
-  } else if (protos.length) {
-    sel.val(protos[0]);
-  }
-  refreshSelect(sel);
-}
-
-function showConnBlock(protocol) {
-  $('.nexo-conn-block').hide();
-  if (protocol === 'modbusTcp') $('#conn_modbusTcp').show();
-  if (protocol === 'modbusRtu' || protocol === 'modbusAscii') $('#conn_modbusRtu').show();
-  if (protocol === 'mbus') $('#conn_mbus').show();
-  if (protocol === 'mqtt') $('#conn_mqtt').show();
-  if (protocol === 'canbus') $('#conn_canbus').show();
-  if (protocol === 'onewire') $('#conn_onewire').show();
-  if (protocol === 'http') $('#conn_http').show();
-  if (protocol === 'udp') $('#conn_udp').show();
-  if (protocol === 'speedwire') $('#conn_speedwire').show();
-}
-
-function summarizeDatapoint(dp) {
-  const src = dp.source || {};
-  const kind = src.kind || '';
-  if (kind === 'modbus') {
-    const r = src.read || {};
-    const w = src.write || {};
-    const dt = (r.dataType || w.dataType || src.dataType || dp.type || '').toString();
-    const sf = (src.scaleFactor !== undefined && src.scaleFactor !== null) ? ` sf=${src.scaleFactor}` : '';
-    const rTxt = (r.fc != null && r.address != null) ? `R:FC${r.fc}@${r.address}(${r.length || 1})` : '';
-    const wTxt = (w.fc != null && w.address != null) ? ` W:FC${w.fc}@${w.address}(${w.length || 1})` : '';
-    return `${rTxt}${wTxt} ${dt}${sf}`.trim();
-  }
-  if (kind === 'mqtt') {
-    return `topic: ${src.topic || ''}`.trim();
-  }
-  if (kind === 'canbus') {
-    if (src.computed) return `computed: ${src.computed}`;
-    const id = (src.canId !== undefined && src.canId !== null) ? src.canId : '';
-    const off = (src.byteOffset !== undefined && src.byteOffset !== null) ? ` off=${src.byteOffset}` : '';
-    const len = (src.byteLength !== undefined && src.byteLength !== null) ? ` len=${src.byteLength}` : '';
-    const dt = (src.dataType || '').toString();
-    return `id: ${id}${off}${len} ${dt}`.trim();
-  }
-  if (kind === 'onewire') {
-    const sid = src.sensorId || '';
-    const f = src.file || 'w1_slave';
-    const p = src.parser || 'ds18b20';
-    return `sensor: ${sid || '(cfg)'} file: ${f} parser: ${p}`.trim();
-  }
-  if (kind === 'mbus') {
-    return `field: ${src.field || ''}`.trim();
-  }
-  if (kind === 'http') {
-    return `${(src.method || 'GET').toUpperCase()} ${src.path || ''} ${src.jsonPath ? ('-> ' + src.jsonPath) : ''}`.trim();
-  }
-  if (kind === 'udp') {
-    const r = src.read || {};
-    const w = src.write || {};
-    const rTxt = r.cmd ? `cmd: ${r.cmd}${r.jsonPath ? (' -> ' + r.jsonPath) : ''}` : '';
-    const wTxt = w.cmdTemplate ? ` set: ${w.cmdTemplate}` : (w.cmd ? ` set: ${w.cmd}` : '');
-    return `${rTxt}${wTxt}`.trim();
-  }
-  if (kind === 'speedwire') {
-    if (src.field) return `field: ${src.field}`;
-    if (src.computed) return `computed: ${src.computed}`;
-    const o = src.obis || {};
-    const parts = [];
-    if (o.b !== undefined && o.b !== null) parts.push(`b=${o.b}`);
-    if (o.c !== undefined && o.c !== null) parts.push(`c=${o.c}`);
-    if (o.d !== undefined && o.d !== null) parts.push(`d=${o.d}`);
-    if (o.e !== undefined && o.e !== null) parts.push(`e=${o.e}`);
-    return parts.length ? `OBIS ${parts.join(', ')}` : 'speedwire';
-  }
-  return kind;
-}
-
-function renderDatapoints(templateId) {
-  const tpl = templatesById[templateId];
-  const tbody = $('#dpBody');
-  tbody.empty();
-
-  if (!tpl || !Array.isArray(tpl.datapoints)) return;
-
-  tpl.datapoints.forEach((dp) => {
-    const row = $(`
-      <tr>
-        <td><code>${escapeHtml(dp.id)}</code></td>
-        <td>${escapeHtml(dp.name || '')}</td>
-        <td>${escapeHtml(dp.type || '')}</td>
-        <td>${escapeHtml(dp.rw || 'ro')}</td>
-        <td>${escapeHtml(summarizeDatapoint(dp))}</td>
-      </tr>
-    `);
-    tbody.append(row);
-  });
-}
-
-function openDeviceModal(device, idx) {
-  editIndex = (typeof idx === 'number') ? idx : -1;
-  $('#modalTitle').text(editIndex >= 0 ? 'Gerät bearbeiten' : 'Gerät hinzufügen');
-
-  $('#dev_id').val(device.id || '');
-  $('#dev_name').val(device.name || '');
-  $('#dev_enabled').prop('checked', device.enabled !== false);
-  $('#dev_poll').val(device.pollIntervalMs || '');
-  $('#dev_hbTimeout').val(device.heartbeatTimeoutMs || '');
-
-  // category/manufacturer/template
-  const cat = device.category || categories[0] || 'GENERIC';
-  $('#dev_category').val(cat);
-  refreshSelect($('#dev_category'));
-
-  fillManufacturerSelect(cat);
-  const manuList = manufacturersByCategory[cat] || [];
-  const manu = device.manufacturer || (manuList[0] || '');
-  $('#dev_manufacturer').val(manu);
-  refreshSelect($('#dev_manufacturer'));
-
-  fillTemplateSelect(cat, manu);
-  const tplId = device.templateId || ($('#dev_template option:first').val() || '');
-  $('#dev_template').val(tplId);
-  refreshSelect($('#dev_template'));
-
-  fillProtocolSelect(tplId, device.protocol);
-
-  const proto = $('#dev_protocol').val();
-  showConnBlock(proto);
-  renderDatapoints(tplId);
-
-  // Auto-fill convenience for new devices: ID + default name
-  if (editIndex < 0) {
-    const curId = ($('#dev_id').val() || '').trim();
-    if (!curId) {
-      lastSuggestedId = suggestDeviceId(cat);
-      $('#dev_id').val(lastSuggestedId);
-    } else {
-      lastSuggestedId = curId;
-    }
-    const curName = ($('#dev_name').val() || '').trim();
-    if (!curName) {
-      const suggested = suggestDeviceName(tplId);
-      if (suggested) {
-        lastSuggestedName = suggested;
-        $('#dev_name').val(suggested);
-      }
-    } else {
-      lastSuggestedName = curName;
-    }
-  } else {
-    lastSuggestedId = ($('#dev_id').val() || '').trim();
-    lastSuggestedName = ($('#dev_name').val() || '').trim();
+  function isObject(val) {
+    return val !== null && typeof val === 'object' && !Array.isArray(val);
   }
 
-  // connection defaults
-  const c = device.connection || {};
-
-  // Remember existing secrets so we do not expose them in the UI.
-  editExistingProtocol = (device && device.protocol ? String(device.protocol) : '');
-  editExistingSecrets = {
-    mqttPassword: editExistingProtocol === 'mqtt' ? (c.password || undefined) : undefined,
-    httpPassword: editExistingProtocol === 'http' ? (c.password || undefined) : undefined,
-    writePassword: (editExistingProtocol === 'modbusTcp' || editExistingProtocol === 'modbusRtu' || editExistingProtocol === 'modbusAscii')
-      ? (c.writePassword || undefined)
-      : undefined,
-  };
-
-  // TCP
-  $('#mb_host').val(c.host || '');
-  $('#mb_port').val(c.port ?? 502);
-  $('#mb_unitId').val(c.unitId ?? 1);
-  $('#mb_timeout').val(c.timeoutMs ?? '');
-  $('#mb_addrOffset').val(c.addressOffset ?? 0);
-  $('#mb_wordOrder').val(c.wordOrder || 'be');
-  $('#mb_byteOrder').val(c.byteOrder || 'be');
-  $('#mb_writePass').val('');
-  refreshSelect($('#mb_wordOrder'));
-  refreshSelect($('#mb_byteOrder'));
-
-  // RTU
-  // Default for ED-IPC3020 RS485: /dev/com2
-  $('#mb_path').val(c.path || '/dev/com2');
-  $('#mb_baud').val(c.baudRate ?? 9600);
-  $('#mb_parity').val(c.parity || 'none');
-  $('#mb_databits').val(c.dataBits ?? 8);
-  $('#mb_stopbits').val(c.stopBits ?? 1);
-  $('#mb_unitId_rtu').val(c.unitId ?? 1);
-  $('#mb_timeout_rtu').val(c.timeoutMs ?? '');
-  $('#mb_addrOffset_rtu').val(c.addressOffset ?? 0);
-  $('#mb_wordOrder_rtu').val(c.wordOrder || 'be');
-  $('#mb_byteOrder_rtu').val(c.byteOrder || 'be');
-  $('#mb_writePass_rtu').val('');
-  refreshSelect($('#mb_parity'));
-  refreshSelect($('#mb_wordOrder_rtu'));
-  refreshSelect($('#mb_byteOrder_rtu'));
-
-  // M-Bus (wired)
-  $('#mbus_path').val(c.path || '/dev/ttyUSB0');
-  $('#mbus_baud').val(c.baudRate ?? 2400);
-  $('#mbus_parity').val(c.parity || 'even');
-  $('#mbus_databits').val(c.dataBits ?? 8);
-  $('#mbus_stopbits').val(c.stopBits ?? 1);
-  $('#mbus_unitId').val(c.unitId ?? 1);
-  $('#mbus_timeout').val(c.timeoutMs ?? '');
-  $('#mbus_sendNke').prop('checked', c.sendNke !== false);
-  refreshSelect($('#mbus_parity'));
-
-  // MQTT
-  $('#mqtt_url').val(c.url || '');
-  $('#mqtt_user').val(c.username || '');
-  $('#mqtt_pass').val('');
-
-  // CANbus
-  $('#can_iface').val(c.interface || c.iface || c.canInterface || 'can0');
-  $('#can_candumpArgs').val(c.candumpArgs || '');
-  $('#can_candumpPath').val(c.candumpPath || 'candump');
-  $('#can_cansendPath').val(c.cansendPath || 'cansend');
-
-  // 1-Wire
-  $('#ow_basePath').val(c.basePath || '/sys/bus/w1/devices');
-  $('#ow_sensorId').val(c.sensorId || '');
-  $('#ow_file').val(c.file || 'w1_slave');
-  $('#ow_parser').val(c.parser || 'ds18b20');
-
-  // HTTP
-  $('#http_baseUrl').val(c.baseUrl || '');
-  $('#http_user').val(c.username || '');
-  $('#http_pass').val('');
-  $('#http_meterId').val(c.meterId || '');
-  $('#http_insecureTls').prop('checked', !!c.insecureTls);
-
-
-  // UDP
-  $('#udp_host').val(c.host || '');
-  $('#udp_port').val(c.port ?? 7090);
-  $('#udp_timeout').val(c.timeoutMs ?? '');
-  $('#udp_pause').val(c.commandPauseMs ?? 0);
-
-  // Speedwire (UDP multicast)
-  $('#sw_filterHost').val(c.filterHost || c.host || '');
-  $('#sw_multicastGroup').val(c.multicastGroup || '239.12.255.254');
-  $('#sw_port').val(c.port ?? 9522);
-  $('#sw_interface').val(c.interfaceAddress || '');
-  // Default increased to 30000ms to reduce false positives on networks where multicast
-  // forwarding can be bursty (IGMP snooping/querier, WiFi multicast filtering, VMs).
-  $('#sw_stale').val(c.staleTimeoutMs ?? 30000);
-
-  updateTextFields();
-  openModal();
-}
-
-function collectDeviceFromModal() {
-  const tplId = $('#dev_template').val();
-  const tpl = templatesById[tplId];
-
-  const d = {
-    id: ($('#dev_id').val() || '').trim(),
-    name: ($('#dev_name').val() || '').trim(),
-    enabled: $('#dev_enabled').is(':checked'),
-    category: $('#dev_category').val(),
-    manufacturer: $('#dev_manufacturer').val(),
-    templateId: tplId,
-    protocol: $('#dev_protocol').val(),
-    pollIntervalMs: ($('#dev_poll').val() || '').trim() ? parseInt($('#dev_poll').val(), 10) : undefined,
-    heartbeatTimeoutMs: ($('#dev_hbTimeout').val() || '').trim() ? parseInt($('#dev_hbTimeout').val(), 10) : undefined,
-    connection: {}
-  };
-
-  // Normalize heartbeat timeout (optional)
-  if (!Number.isFinite(Number(d.heartbeatTimeoutMs)) || Number(d.heartbeatTimeoutMs) <= 0) {
-    delete d.heartbeatTimeoutMs;
-  } else {
-    d.heartbeatTimeoutMs = Math.trunc(Number(d.heartbeatTimeoutMs));
-  }
-
-  if (tpl && Array.isArray(tpl.protocols) && d.protocol && !tpl.protocols.includes(d.protocol)) {
-    throw new Error('Protokoll wird vom Template nicht unterstützt');
-  }
-
-  // Connection fields
-  if (d.protocol === 'modbusTcp') {
-    d.connection.host = ($('#mb_host').val() || '').trim();
-    d.connection.port = parseInt($('#mb_port').val(), 10) || 502;
-    d.connection.unitId = parseInt($('#mb_unitId').val(), 10) || 1;
-
-    const t = parseInt($('#mb_timeout').val(), 10);
-    if (!isNaN(t)) d.connection.timeoutMs = t;
-
-    const o = parseInt($('#mb_addrOffset').val(), 10);
-    if (!isNaN(o)) d.connection.addressOffset = o;
-
-    d.connection.wordOrder = $('#mb_wordOrder').val() || 'be';
-    d.connection.byteOrder = $('#mb_byteOrder').val() || 'be';
-    {
-      const wp = ($('#mb_writePass').val() || '').trim();
-      if (wp) {
-        d.connection.writePassword = wp;
-      } else if (editExistingProtocol === 'modbusTcp' && editExistingSecrets && editExistingSecrets.writePassword) {
-        d.connection.writePassword = editExistingSecrets.writePassword;
-      }
-    }
-  } else if (d.protocol === 'modbusRtu' || d.protocol === 'modbusAscii') {
-    d.connection.path = ($('#mb_path').val() || '').trim();
-    d.connection.baudRate = parseInt($('#mb_baud').val(), 10) || 9600;
-    d.connection.parity = $('#mb_parity').val() || 'none';
-    d.connection.dataBits = parseInt($('#mb_databits').val(), 10) || 8;
-    d.connection.stopBits = parseInt($('#mb_stopbits').val(), 10) || 1;
-
-    d.connection.unitId = parseInt($('#mb_unitId_rtu').val(), 10) || 1;
-
-    const t = parseInt($('#mb_timeout_rtu').val(), 10);
-    if (!isNaN(t)) d.connection.timeoutMs = t;
-
-    const o = parseInt($('#mb_addrOffset_rtu').val(), 10);
-    if (!isNaN(o)) d.connection.addressOffset = o;
-
-    d.connection.wordOrder = $('#mb_wordOrder_rtu').val() || 'be';
-    d.connection.byteOrder = $('#mb_byteOrder_rtu').val() || 'be';
-    {
-      const wp = ($('#mb_writePass_rtu').val() || '').trim();
-      if (wp) {
-        d.connection.writePassword = wp;
-      } else if ((editExistingProtocol === 'modbusRtu' || editExistingProtocol === 'modbusAscii') && editExistingSecrets && editExistingSecrets.writePassword) {
-        d.connection.writePassword = editExistingSecrets.writePassword;
-      }
-    }
-  } else if (d.protocol === 'mbus') {
-    d.connection.path = ($('#mbus_path').val() || '').trim();
-    d.connection.baudRate = parseInt($('#mbus_baud').val(), 10) || 2400;
-    d.connection.parity = $('#mbus_parity').val() || 'even';
-    d.connection.dataBits = parseInt($('#mbus_databits').val(), 10) || 8;
-    d.connection.stopBits = parseInt($('#mbus_stopbits').val(), 10) || 1;
-
-    const a = parseInt($('#mbus_unitId').val(), 10);
-    d.connection.unitId = isNaN(a) ? 1 : a;
-
-    const t = parseInt($('#mbus_timeout').val(), 10);
-    if (!isNaN(t)) d.connection.timeoutMs = t;
-
-    d.connection.sendNke = $('#mbus_sendNke').is(':checked');
-  } else if (d.protocol === 'mqtt') {
-    d.connection.url = ($('#mqtt_url').val() || '').trim();
-    d.connection.username = ($('#mqtt_user').val() || '').trim() || undefined;
-    {
-      const p = ($('#mqtt_pass').val() || '').trim();
-      if (p) {
-        d.connection.password = p;
-      } else if (editExistingProtocol === 'mqtt' && editExistingSecrets && editExistingSecrets.mqttPassword) {
-        d.connection.password = editExistingSecrets.mqttPassword;
-      }
-    }
-  } else if (d.protocol === 'canbus') {
-    d.connection.interface = ($('#can_iface').val() || '').trim() || 'can0';
-    d.connection.candumpArgs = ($('#can_candumpArgs').val() || '').trim() || undefined;
-    d.connection.candumpPath = ($('#can_candumpPath').val() || '').trim() || 'candump';
-    d.connection.cansendPath = ($('#can_cansendPath').val() || '').trim() || 'cansend';
-  } else if (d.protocol === 'onewire') {
-    d.connection.basePath = ($('#ow_basePath').val() || '').trim() || '/sys/bus/w1/devices';
-    d.connection.sensorId = ($('#ow_sensorId').val() || '').trim();
-    d.connection.file = ($('#ow_file').val() || '').trim() || 'w1_slave';
-    d.connection.parser = ($('#ow_parser').val() || 'ds18b20').trim() || 'ds18b20';
-  } else if (d.protocol === 'http') {
-    d.connection.baseUrl = ($('#http_baseUrl').val() || '').trim();
-    d.connection.username = ($('#http_user').val() || '').trim() || undefined;
-    {
-      const p = ($('#http_pass').val() || '').trim();
-      if (p) {
-        d.connection.password = p;
-      } else if (editExistingProtocol === 'http' && editExistingSecrets && editExistingSecrets.httpPassword) {
-        d.connection.password = editExistingSecrets.httpPassword;
-      }
-    }
-    d.connection.meterId = ($('#http_meterId').val() || '').trim() || undefined;
-    if ($('#http_insecureTls').is(':checked')) d.connection.insecureTls = true;
-  } else if (d.protocol === 'udp') {
-    d.connection.host = ($('#udp_host').val() || '').trim();
-    d.connection.port = parseInt($('#udp_port').val(), 10) || 7090;
-    const t = parseInt($('#udp_timeout').val(), 10);
-    if (!isNaN(t)) d.connection.timeoutMs = t;
-    const p = parseInt($('#udp_pause').val(), 10);
-    if (!isNaN(p)) d.connection.commandPauseMs = p;
-  } else if (d.protocol === 'speedwire') {
-    const filterHost = ($('#sw_filterHost').val() || '').trim();
-    if (filterHost) {
-      d.connection.filterHost = filterHost;
-      // Backwards/compat: also expose under host, as many UIs use this field.
-      d.connection.host = filterHost;
-    }
-
-    d.connection.multicastGroup = ($('#sw_multicastGroup').val() || '').trim() || '239.12.255.254';
-    d.connection.port = parseInt($('#sw_port').val(), 10) || 9522;
-    const iface = ($('#sw_interface').val() || '').trim();
-    if (iface) d.connection.interfaceAddress = iface;
-
-    const st = parseInt($('#sw_stale').val(), 10);
-    if (!isNaN(st)) d.connection.staleTimeoutMs = st;
-  }
-
-  // minimal validation
-  if (!d.id) throw new Error('Geräte-ID fehlt');
-  if (!/^[a-zA-Z0-9_\-]+$/.test(d.id)) throw new Error('Ungültige Geräte-ID. Erlaubt: Buchstaben, Zahlen, _ und -');
-  if (!d.templateId) throw new Error('Template fehlt');
-  if (!d.protocol) throw new Error('Protokoll fehlt');
-
-  if (d.protocol === 'modbusTcp' && !d.connection.host) throw new Error('Modbus TCP Host/IP fehlt');
-  if ((d.protocol === 'modbusRtu' || d.protocol === 'modbusAscii') && !d.connection.path) throw new Error('Modbus Serial-Port fehlt');
-  if (d.protocol === 'mbus' && !d.connection.path) throw new Error('M-Bus Serial-Port fehlt');
-  if (d.protocol === 'mqtt' && !d.connection.url) throw new Error('MQTT Broker-URL fehlt');
-  if (d.protocol === 'canbus' && !d.connection.interface) throw new Error('CAN Interface fehlt (z.B. can0)');
-  if (d.protocol === 'onewire' && !d.connection.sensorId) throw new Error('1-Wire Sensor-ID fehlt');
-  if (d.protocol === 'http' && !d.connection.baseUrl) throw new Error('HTTP Base-URL fehlt');
-
-  if (d.protocol === 'udp' && !d.connection.host) throw new Error('UDP Host/IP fehlt');
-
-  // Speedwire has sensible defaults; filterHost is optional.
-
-  return d;
-}
-
-function updateJsonPreview() {
-  const jsonStr = JSON.stringify(devices || [], null, 2);
-  $('#devicesJson').val(jsonStr);
-
-  // Do not leak secrets in the UI preview
-  const masked = (devices || []).map(d => {
-    const clone = safeJsonParse(JSON.stringify(d || {}), {});
-    if (clone && clone.connection) {
-      if (clone.connection.password) clone.connection.password = '******';
-      if (clone.connection.writePassword) clone.connection.writePassword = '******';
-    }
-    return clone;
-  });
-
-  $('#jsonPreview').text(JSON.stringify(masked, null, 2));
-}
-
-function initEventHandlers() {
-  // JSON preview toggle
-  $('#btnShowJson').on('click', () => {
-    const shown = $('#jsonPreview').is(':visible');
-    if (shown) {
-      $('#jsonPreview').hide();
-    } else {
-      updateJsonPreview();
-      $('#jsonPreview').show();
-    }
-  });
-
-  // Add
-  $('#btnAddDevice').on('click', () => {
-    openDeviceModal({ enabled: true }, -1);
-  });
-
-  // Table actions
-  $('#devicesTable').on('click', 'a[data-action]', (ev) => {
-    const action = $(ev.currentTarget).data('action');
-    const idx = parseInt($(ev.currentTarget).data('idx'), 10);
-
-    if (action === 'edit') {
-      openDeviceModal(devices[idx], idx);
-    } else if (action === 'delete') {
-      const d = devices[idx];
-      if (confirm(`Gerät löschen: ${d.id}?`)) {
-        devices.splice(idx, 1);
-        renderDevicesTable();
-        updateJsonPreview();
-        setChanged(true);
-      }
-    }
-  });
-
-  // Cancel
-  $('#btnCancelDevice').on('click', () => closeModal());
-
-  // Backdrop click (fallback)
-  $('#nexoBackdrop').on('click', () => closeModal());
-
-  // Modal dependent selects
-  $('#dev_category').on('change', () => {
-    const cat = $('#dev_category').val();
-    fillManufacturerSelect(cat);
-
-    const manu = $('#dev_manufacturer').val();
-    fillTemplateSelect(cat, manu);
-
-    const tplId = $('#dev_template').val();
-    fillProtocolSelect(tplId);
-
-    showConnBlock($('#dev_protocol').val());
-    renderDatapoints(tplId);
-
-    // Keep ID/Name suggestions in sync for new devices
-    if (editIndex < 0) {
-      const curId = ($('#dev_id').val() || '').trim();
-      if (!curId || curId === lastSuggestedId) {
-        lastSuggestedId = suggestDeviceId(cat);
-        $('#dev_id').val(lastSuggestedId);
-      }
-      const curName = ($('#dev_name').val() || '').trim();
-      if (!curName || curName === lastSuggestedName) {
-        lastSuggestedName = suggestDeviceName(tplId);
-        if (lastSuggestedName) $('#dev_name').val(lastSuggestedName);
-      }
-    }
-
-    updateTextFields();
-  });
-
-  $('#dev_manufacturer').on('change', () => {
-    const cat = $('#dev_category').val();
-    const manu = $('#dev_manufacturer').val();
-    fillTemplateSelect(cat, manu);
-
-    const tplId = $('#dev_template').val();
-    fillProtocolSelect(tplId);
-
-    showConnBlock($('#dev_protocol').val());
-    renderDatapoints(tplId);
-
-    if (editIndex < 0) {
-      const curName = ($('#dev_name').val() || '').trim();
-      if (!curName || curName === lastSuggestedName) {
-        lastSuggestedName = suggestDeviceName(tplId);
-        if (lastSuggestedName) $('#dev_name').val(lastSuggestedName);
-      }
-    }
-
-    updateTextFields();
-  });
-
-  $('#dev_template').on('change', () => {
-    const tplId = $('#dev_template').val();
-    fillProtocolSelect(tplId);
-
-    showConnBlock($('#dev_protocol').val());
-    renderDatapoints(tplId);
-
-    if (editIndex < 0) {
-      const curName = ($('#dev_name').val() || '').trim();
-      if (!curName || curName === lastSuggestedName) {
-        lastSuggestedName = suggestDeviceName(tplId);
-        if (lastSuggestedName) $('#dev_name').val(lastSuggestedName);
-      }
-    }
-
-    updateTextFields();
-  });
-
-  $('#dev_protocol').on('change', () => {
-    showConnBlock($('#dev_protocol').val());
-  });
-
-  // Save device
-  $('#btnSaveDevice').on('click', () => {
+  function getInstanceId() {
     try {
-      const d = collectDeviceFromModal();
-
-      // uniqueness check
-      const existsIdx = devices.findIndex((x, i) => x.id === d.id && i !== editIndex);
-      if (existsIdx >= 0) {
-        throw new Error('Geräte-ID existiert bereits');
-      }
-
-      if (editIndex >= 0) {
-        devices[editIndex] = d;
-      } else {
-        devices.push(d);
-      }
-
-      devices.sort((a, b) => (a.id || '').localeCompare(b.id || ''));
-
-      renderDevicesTable();
-      updateJsonPreview();
-      setChanged(true);
-
-      closeModal();
+      const params = new URLSearchParams(window.location.search);
+      const inst = params.get('instance');
+      if (inst !== null && inst !== undefined && inst !== '') return inst;
     } catch (e) {
-      toast('Fehler: ' + (e.message || e.toString()));
+      // ignore
     }
-  });
-}
-
-function initUIOnce() {
-  if (uiInitialized) return;
-  uiInitialized = true;
-
-  // Init modals/selects if available, but never block UI if not.
-  if (hasMaterialize()) {
-    try {
-      const elems = document.querySelectorAll('.modal');
-      M.Modal.init(elems, { dismissible: false });
-    } catch (e) {
-      console.warn('Materialize modal init failed:', e);
-      $('#modalDevice').addClass('nexo-fallback');
-    }
-  } else {
-    $('#modalDevice').addClass('nexo-fallback');
+    return '0';
   }
 
-  // We intentionally do NOT initialize Materialize "formSelect" for browser-default selects.
-  // This avoids invisible/empty selects in some Admin setups.
-  if (hasFormSelect()) {
-    try { $('select').not('.browser-default').formSelect(); } catch (e) { /* ignore */ }
-  }
-
-  initEventHandlers();
-}
-
-function applySettingsToUI(settings) {
-  $('#pollIntervalMs').val(settings.pollIntervalMs ?? 5000);
-  $('#modbusTimeoutMs').val(settings.modbusTimeoutMs ?? 2000);
-  $('#registerAddressOffset').val(settings.registerAddressOffset ?? 0);
-
-  let parsed = [];
-  if (Array.isArray(settings.devicesJson)) {
-    parsed = settings.devicesJson;
-  } else if (typeof settings.devicesJson === 'string') {
-    parsed = safeJsonParse(settings.devicesJson || '[]', []);
-  }
-  devices = Array.isArray(parsed) ? parsed : [];
-
-  updateJsonPreview();
-  renderDevicesTable();
-  updateTextFields();
-}
-
-/* ioBroker admin hooks */
-function load(settings, onChange) {
-  onChangeGlobal = onChange;
-  if (!settings) settings = {};
-
-  loadTemplates()
-    .then(() => {
-      initUIOnce();
-      fillCategorySelect();
-      applySettingsToUI(settings);
-      translateAll();
-      onChange(false);
-    })
-    .catch((e) => {
-      console.error(e);
-      initUIOnce();
-      applySettingsToUI(settings);
-      toast('Warnung: Templates konnten nicht geladen werden. Bitte Browser-Cache leeren und erneut öffnen.');
-      onChange(false);
+  function maskSecrets(devices) {
+    return (devices || []).map(d => {
+      const clone = safeJsonParse(JSON.stringify(d || {}), {});
+      if (clone && clone.connection) {
+        if (clone.connection.password) clone.connection.password = '******';
+        if (clone.connection.writePassword) clone.connection.writePassword = '******';
+      }
+      return clone;
     });
-}
+  }
 
-function save(callback) {
-  const obj = {};
-  obj.pollIntervalMs = parseInt($('#pollIntervalMs').val(), 10) || 5000;
-  obj.modbusTimeoutMs = parseInt($('#modbusTimeoutMs').val(), 10) || 2000;
-  obj.registerAddressOffset = parseInt($('#registerAddressOffset').val(), 10) || 0;
-  obj.devicesJson = JSON.stringify(devices || [], null, 2);
+  function normalizeDevices(devices) {
+    if (!Array.isArray(devices)) return [];
+    return devices
+      .filter(d => isObject(d))
+      .map(d => {
+        const out = Object.assign({}, d);
+        if (!isObject(out.connection)) out.connection = {};
+        if (typeof out.enabled !== 'boolean') out.enabled = true;
+        return out;
+      });
+  }
 
-  callback(obj);
-}
+
+  function coerceInt(val) {
+    if (val === null || val === undefined) return undefined;
+    const s = String(val).trim();
+    if (s === '') return undefined;
+    const n = Number(s);
+    if (!Number.isFinite(n)) return undefined;
+    return Math.trunc(n);
+  }
+  function uniq(arr) {
+    return Array.from(new Set(arr.filter(v => v !== undefined && v !== null && String(v).trim() !== '')));
+  }
+
+  function sortAlpha(arr) {
+    return arr.slice().sort((a, b) => String(a).localeCompare(String(b)));
+  }
+
+  function suggestId(prefix, devices) {
+    const used = new Set((devices || []).map(d => String(d.id || '').toLowerCase()));
+    let n = 1;
+    let id = `${prefix}${n}`;
+    while (used.has(id.toLowerCase())) {
+      n += 1;
+      id = `${prefix}${n}`;
+      if (n > 9999) break;
+    }
+    return id;
+  }
+
+  function categoryPrefix(category) {
+    switch (category) {
+      case 'PV_INVERTER':
+        return 'inv';
+      case 'METER':
+        return 'meter';
+      case 'EVCS':
+      case 'EVSE':
+      case 'CHARGER':
+      case 'DC_CHARGER':
+        return 'ev';
+      case 'BATTERY':
+      case 'BATTERY_INVERTER':
+      case 'ESS':
+        return 'ess';
+      case 'HEAT':
+        return 'heat';
+      case 'IO':
+        return 'io';
+      default:
+        return 'dev';
+    }
+  }
+
+  function defaultConnection(protocol) {
+    if (protocol === 'modbusTcp') {
+      return {
+        host: '',
+        port: 502,
+        unitId: 1,
+        timeoutMs: undefined,
+        addressOffset: undefined,
+        wordOrder: 'be',
+        byteOrder: 'be',
+        writePassword: undefined,
+      };
+    }
+    if (protocol === 'modbusRtu' || protocol === 'modbusAscii') {
+      return {
+        path: '',
+        baudRate: 9600,
+        parity: 'none',
+        dataBits: 8,
+        stopBits: 1,
+        unitId: 1,
+        timeoutMs: undefined,
+        addressOffset: undefined,
+        wordOrder: 'be',
+        byteOrder: 'be',
+        writePassword: undefined,
+      };
+    }
+    if (protocol === 'mbus') {
+      return {
+        path: '',
+        baudRate: 2400,
+        parity: 'even',
+        dataBits: 8,
+        stopBits: 1,
+        unitId: 1,
+        timeoutMs: undefined,
+        sendNke: false,
+      };
+    }
+    if (protocol === 'mqtt') {
+      return {
+        url: '',
+        username: undefined,
+        password: undefined,
+      };
+    }
+    if (protocol === 'http') {
+      return {
+        baseUrl: '',
+        username: undefined,
+        password: undefined,
+        meterId: undefined,
+        insecureTls: false,
+      };
+    }
+    if (protocol === 'udp') {
+      return {
+        host: '',
+        port: 7090,
+        timeoutMs: undefined,
+        commandPauseMs: 0,
+      };
+    }
+    if (protocol === 'speedwire') {
+      return {
+        filterHost: '',
+        multicastGroup: '239.12.255.254',
+        port: 9522,
+        interfaceAddress: '',
+        staleTimeoutMs: 30000,
+      };
+    }
+    if (protocol === 'onewire') {
+      return {
+        basePath: '/sys/bus/w1/devices',
+        sensorId: '',
+        file: 'w1_slave',
+        parser: 'ds18b20',
+      };
+    }
+    if (protocol === 'canbus') {
+      return {
+        interface: 'can0',
+        candumpArgs: undefined,
+        candumpPath: 'candump',
+        cansendPath: 'cansend',
+      };
+    }
+    return {};
+  }
+
+  function normalizeProtocolForTemplate(template, protocol) {
+    if (!template || !Array.isArray(template.protocols) || template.protocols.length === 0) return protocol || '';
+    if (protocol && template.protocols.includes(protocol)) return protocol;
+    return template.protocols[0];
+  }
+
+  class EnergyBridgeAdmin extends React.Component {
+    constructor(props) {
+      super(props);
+
+      this.state = {
+        loaded: false,
+        activeTab: 'general',
+        global: {
+          pollIntervalMs: 5000,
+          modbusTimeoutMs: 2000,
+          registerAddressOffset: 0,
+        },
+        templates: [],
+        templatesById: {},
+        categories: [],
+        manufacturersByCategory: {},
+        templatesByCatMan: {},
+        devices: [],
+        status: {
+          alive: null,
+          connection: null,
+        },
+        error: null,
+
+        deviceModal: {
+          open: false,
+          mode: 'add',
+          index: -1,
+          draft: null,
+          existingSecrets: null,
+          errors: [],
+        },
+
+        jsonModal: {
+          open: false,
+          mode: 'export',
+          text: '',
+          error: null,
+        },
+      };
+
+      this._onChange = null;
+      this._stateChangeHandler = null;
+    }
+
+    componentDidMount() {
+      this.loadTemplates();
+      this.initStatusSubscription();
+
+      // Apply pending load() call (if admin called load before React mounted)
+      if (window.__energyBridgePendingSettings) {
+        const pending = window.__energyBridgePendingSettings;
+        const cb = window.__energyBridgePendingOnChange;
+        delete window.__energyBridgePendingSettings;
+        delete window.__energyBridgePendingOnChange;
+        this.setLoadedSettings(pending, cb);
+      }
+    }
+
+    componentWillUnmount() {
+      try {
+        if (this._stateChangeHandler && typeof socket !== 'undefined' && socket && socket.off) {
+          socket.off('stateChange', this._stateChangeHandler);
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    markChanged() {
+      if (typeof this._onChange === 'function') {
+        this._onChange(true);
+      }
+    }
+
+    setLoadedSettings(settings, onChange) {
+      this._onChange = onChange;
+
+      const g = Object.assign({}, this.state.global);
+      if (settings && settings.pollIntervalMs !== undefined) g.pollIntervalMs = settings.pollIntervalMs;
+      if (settings && settings.modbusTimeoutMs !== undefined) g.modbusTimeoutMs = settings.modbusTimeoutMs;
+      if (settings && settings.registerAddressOffset !== undefined) g.registerAddressOffset = settings.registerAddressOffset;
+
+      let devices = [];
+      if (settings && typeof settings.devicesJson === 'string') {
+        devices = safeJsonParse(settings.devicesJson, []);
+      } else if (settings && Array.isArray(settings.devices)) {
+        devices = settings.devices;
+      }
+      devices = normalizeDevices(devices);
+
+      this.setState({ global: g, devices, loaded: true }, () => {
+        if (typeof this._onChange === 'function') this._onChange(false);
+      });
+    }
+
+    getSaveConfig() {
+      const g = this.state.global || {};
+      const devices = normalizeDevices(this.state.devices);
+
+      const out = {
+        pollIntervalMs: Number.isFinite(Number(g.pollIntervalMs)) ? Math.trunc(Number(g.pollIntervalMs)) : 5000,
+        modbusTimeoutMs: Number.isFinite(Number(g.modbusTimeoutMs)) ? Math.trunc(Number(g.modbusTimeoutMs)) : 2000,
+        registerAddressOffset: Number.isFinite(Number(g.registerAddressOffset)) ? Math.trunc(Number(g.registerAddressOffset)) : 0,
+        devicesJson: JSON.stringify(devices, null, 2),
+      };
+
+      return out;
+    }
+
+    loadTemplates() {
+      fetch('templates.json')
+        .then(res => res.json())
+        .then(data => {
+          const templates = (data && Array.isArray(data.templates)) ? data.templates : [];
+          const byId = {};
+          templates.forEach(tpl => {
+            if (tpl && tpl.id) byId[tpl.id] = tpl;
+          });
+
+          const categories = sortAlpha(uniq(templates.map(tpl => tpl.category)));
+          const manufacturersByCategory = {};
+          const templatesByCatMan = {};
+
+          categories.forEach(cat => {
+            const mans = sortAlpha(uniq(templates.filter(tpl => tpl.category === cat).map(tpl => tpl.manufacturer)));
+            manufacturersByCategory[cat] = mans;
+
+            templatesByCatMan[cat] = {};
+            mans.forEach(m => {
+              templatesByCatMan[cat][m] = templates
+                .filter(tpl => tpl.category === cat && tpl.manufacturer === m)
+                .map(tpl => ({ id: tpl.id, name: tpl.name || tpl.id, protocols: tpl.protocols || [] }));
+            });
+          });
+
+          this.setState({ templates, templatesById: byId, categories, manufacturersByCategory, templatesByCatMan });
+        })
+        .catch(err => {
+          this.setState({ error: String(err && err.message ? err.message : err) });
+        });
+    }
+
+    initStatusSubscription() {
+      try {
+        if (typeof socket === 'undefined' || !socket) return;
+
+        const inst = getInstanceId();
+        const aliveId = `system.adapter.energy-bridge.${inst}.alive`;
+        const connId = `energy-bridge.${inst}.info.connection`;
+
+        socket.emit('getState', aliveId, (err, state) => {
+          if (!err && state) {
+            this.setState({ status: Object.assign({}, this.state.status, { alive: !!state.val }) });
+          }
+        });
+
+        socket.emit('getState', connId, (err, state) => {
+          if (!err && state) {
+            this.setState({ status: Object.assign({}, this.state.status, { connection: !!state.val }) });
+          }
+        });
+
+        socket.emit('subscribe', aliveId);
+        socket.emit('subscribe', connId);
+
+        this._stateChangeHandler = (id, state) => {
+          if (!state) return;
+          if (id === aliveId) {
+            this.setState({ status: Object.assign({}, this.state.status, { alive: !!state.val }) });
+          } else if (id === connId) {
+            this.setState({ status: Object.assign({}, this.state.status, { connection: !!state.val }) });
+          }
+        };
+
+        socket.on('stateChange', this._stateChangeHandler);
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    setActiveTab(tab) {
+      this.setState({ activeTab: tab });
+    }
+
+    updateGlobalField(field, value) {
+      const g = Object.assign({}, this.state.global);
+      g[field] = value;
+      this.setState({ global: g }, () => this.markChanged());
+    }
+
+    openDeviceModal(mode, index) {
+      const devices = normalizeDevices(this.state.devices);
+      const templatesById = this.state.templatesById || {};
+
+      let draft;
+      let existingSecrets = null;
+
+      if (mode === 'edit' && index >= 0 && index < devices.length) {
+        draft = safeJsonParse(JSON.stringify(devices[index]), {});
+        existingSecrets = {};
+        if (draft && draft.connection) {
+          if (draft.connection.password) existingSecrets.password = draft.connection.password;
+          if (draft.connection.writePassword) existingSecrets.writePassword = draft.connection.writePassword;
+        }
+      } else {
+        const defaultCategory = (this.state.categories && this.state.categories[0]) || '';
+        const mans = (this.state.manufacturersByCategory && this.state.manufacturersByCategory[defaultCategory]) || [];
+        const defaultMan = mans[0] || '';
+        const tpls = (((this.state.templatesByCatMan || {})[defaultCategory] || {})[defaultMan]) || [];
+        const defaultTplId = (tpls[0] && tpls[0].id) || '';
+        const tpl = templatesById[defaultTplId];
+        const protocol = normalizeProtocolForTemplate(tpl, (tpl && tpl.protocols && tpl.protocols[0]) || '');
+        draft = {
+          id: suggestId(categoryPrefix(defaultCategory), devices),
+          name: (tpl && tpl.name) ? tpl.name : '',
+          enabled: true,
+          category: defaultCategory,
+          manufacturer: defaultMan,
+          templateId: defaultTplId,
+          protocol,
+          pollIntervalMs: undefined,
+          heartbeatTimeoutMs: undefined,
+          connection: defaultConnection(protocol),
+        };
+      }
+
+      // Normalize draft based on template protocols
+      const tpl = templatesById[draft.templateId];
+      const normalizedProtocol = normalizeProtocolForTemplate(tpl, draft.protocol);
+      if (normalizedProtocol !== draft.protocol) {
+        draft.protocol = normalizedProtocol;
+        draft.connection = Object.assign(defaultConnection(normalizedProtocol), draft.connection || {});
+      }
+
+      this.setState({
+        deviceModal: {
+          open: true,
+          mode,
+          index,
+          draft,
+          existingSecrets,
+          errors: [],
+        },
+      });
+    }
+
+    closeDeviceModal() {
+      this.setState({
+        deviceModal: {
+          open: false,
+          mode: 'add',
+          index: -1,
+          draft: null,
+          existingSecrets: null,
+          errors: [],
+        },
+      });
+    }
+
+    updateDraftField(path, value) {
+      const modal = Object.assign({}, this.state.deviceModal);
+      const draft = Object.assign({}, modal.draft || {});
+      const parts = String(path).split('.');
+      let cur = draft;
+
+      for (let i = 0; i < parts.length - 1; i += 1) {
+        const p = parts[i];
+        if (!isObject(cur[p])) cur[p] = {};
+        cur = cur[p];
+      }
+      cur[parts[parts.length - 1]] = value;
+
+      // Special handling when changing template or protocol
+      if (path === 'templateId') {
+        const tpl = (this.state.templatesById || {})[value];
+        const protocol = normalizeProtocolForTemplate(tpl, draft.protocol);
+        draft.category = (tpl && tpl.category) ? tpl.category : draft.category;
+        draft.manufacturer = (tpl && tpl.manufacturer) ? tpl.manufacturer : draft.manufacturer;
+        draft.protocol = protocol;
+        draft.name = (tpl && tpl.name) ? tpl.name : draft.name;
+        draft.connection = Object.assign(defaultConnection(protocol), draft.connection || {});
+        if (!draft.id) draft.id = suggestId(categoryPrefix(draft.category), normalizeDevices(this.state.devices));
+      }
+
+      if (path === 'protocol') {
+        const tpl = (this.state.templatesById || {})[draft.templateId];
+        const protocol = normalizeProtocolForTemplate(tpl, value);
+        draft.protocol = protocol;
+        draft.connection = Object.assign(defaultConnection(protocol), draft.connection || {});
+      }
+
+      modal.draft = draft;
+      this.setState({ deviceModal: modal });
+    }
+
+    validateDraft(draft, existingSecrets) {
+      const errors = [];
+
+      const id = String(draft.id || '').trim();
+      if (!id) errors.push(t('Device ID is required.'));
+      if (id && !/^[a-zA-Z0-9_\-]+$/.test(id)) errors.push(t('Invalid device ID. Allowed: letters, numbers, _ and -'));
+      if (!draft.templateId) errors.push(t('Template is required.'));
+      if (!draft.protocol) errors.push(t('Protocol is required.'));
+
+      const tpl = (this.state.templatesById || {})[draft.templateId];
+      if (tpl && Array.isArray(tpl.protocols) && draft.protocol && !tpl.protocols.includes(draft.protocol)) {
+        errors.push(t('Template not supported by selected protocol.'));
+      }
+
+      const c = draft.connection || {};
+      if (draft.protocol === 'modbusTcp' && !String(c.host || '').trim()) errors.push(t('Modbus TCP host is required.'));
+      if ((draft.protocol === 'modbusRtu' || draft.protocol === 'modbusAscii' || draft.protocol === 'mbus') && !String(c.path || '').trim()) errors.push(t('Serial port is required.'));
+      if (draft.protocol === 'mqtt' && !String(c.url || '').trim()) errors.push(t('MQTT broker URL is required.'));
+      if (draft.protocol === 'canbus' && !String(c.interface || '').trim()) errors.push(t('CAN interface is required.'));
+      if (draft.protocol === 'onewire' && !String(c.sensorId || '').trim()) errors.push(t('1-Wire sensor ID is required.'));
+      if (draft.protocol === 'http' && !String(c.baseUrl || '').trim()) errors.push(t('HTTP base URL is required.'));
+      if (draft.protocol === 'udp' && !String(c.host || '').trim()) errors.push(t('UDP host is required.'));
+
+      // Preserve secrets if the fields are empty
+      if (draft.protocol === 'mqtt') {
+        if (!String(c.password || '').trim() && existingSecrets && existingSecrets.password) c.password = existingSecrets.password;
+      }
+      if (draft.protocol === 'http') {
+        if (!String(c.password || '').trim() && existingSecrets && existingSecrets.password) c.password = existingSecrets.password;
+      }
+      if (draft.protocol === 'modbusTcp' || draft.protocol === 'modbusRtu' || draft.protocol === 'modbusAscii') {
+        if (!String(c.writePassword || '').trim() && existingSecrets && existingSecrets.writePassword) c.writePassword = existingSecrets.writePassword;
+      }
+
+
+      // Coerce numeric fields to numbers (to keep the adapter config clean)
+      if (draft.pollIntervalMs !== undefined) draft.pollIntervalMs = coerceInt(draft.pollIntervalMs);
+      if (draft.heartbeatTimeoutMs !== undefined) draft.heartbeatTimeoutMs = coerceInt(draft.heartbeatTimeoutMs);
+
+      if (draft.protocol === 'modbusTcp') {
+        c.port = coerceInt(c.port);
+        c.unitId = coerceInt(c.unitId);
+        c.timeoutMs = coerceInt(c.timeoutMs);
+        c.addressOffset = coerceInt(c.addressOffset);
+      } else if (draft.protocol === 'modbusRtu' || draft.protocol === 'modbusAscii') {
+        c.baudRate = coerceInt(c.baudRate);
+        c.dataBits = coerceInt(c.dataBits);
+        c.stopBits = coerceInt(c.stopBits);
+        c.unitId = coerceInt(c.unitId);
+        c.timeoutMs = coerceInt(c.timeoutMs);
+        c.addressOffset = coerceInt(c.addressOffset);
+      } else if (draft.protocol === 'mbus') {
+        c.baudRate = coerceInt(c.baudRate);
+        c.dataBits = coerceInt(c.dataBits);
+        c.stopBits = coerceInt(c.stopBits);
+        c.unitId = coerceInt(c.unitId);
+        c.timeoutMs = coerceInt(c.timeoutMs);
+      } else if (draft.protocol === 'udp') {
+        c.port = coerceInt(c.port);
+        c.timeoutMs = coerceInt(c.timeoutMs);
+        c.commandPauseMs = coerceInt(c.commandPauseMs) || 0;
+      } else if (draft.protocol === 'speedwire') {
+        c.port = coerceInt(c.port);
+        c.staleTimeoutMs = coerceInt(c.staleTimeoutMs);
+      }
+
+      return { errors, draft: Object.assign({}, draft, { id: id, connection: c }) };
+    }
+
+    saveDeviceFromModal() {
+      const modal = this.state.deviceModal;
+      if (!modal || !modal.draft) return;
+
+      const v = this.validateDraft(Object.assign({}, modal.draft), modal.existingSecrets);
+      if (v.errors.length) {
+        this.setState({ deviceModal: Object.assign({}, modal, { errors: v.errors }) });
+        return;
+      }
+
+      const devices = normalizeDevices(this.state.devices);
+      if (modal.mode === 'edit' && modal.index >= 0 && modal.index < devices.length) {
+        devices[modal.index] = v.draft;
+      } else {
+        devices.push(v.draft);
+      }
+
+      this.setState({ devices }, () => {
+        this.markChanged();
+        this.closeDeviceModal();
+      });
+    }
+
+    deleteDevice(index) {
+      const devices = normalizeDevices(this.state.devices);
+      if (index < 0 || index >= devices.length) return;
+
+      if (!window.confirm(t('Are you sure you want to delete this device?'))) return;
+
+      devices.splice(index, 1);
+      this.setState({ devices }, () => this.markChanged());
+    }
+
+    openJsonModal(mode) {
+      const devices = normalizeDevices(this.state.devices);
+      if (mode === 'export') {
+        this.setState({
+          jsonModal: {
+            open: true,
+            mode: 'export',
+            text: JSON.stringify(maskSecrets(devices), null, 2),
+            error: null,
+          },
+        });
+      } else {
+        this.setState({
+          jsonModal: {
+            open: true,
+            mode: 'import',
+            text: '',
+            error: null,
+          },
+        });
+      }
+    }
+
+    closeJsonModal() {
+      this.setState({
+        jsonModal: {
+          open: false,
+          mode: 'export',
+          text: '',
+          error: null,
+        },
+      });
+    }
+
+    applyJsonImport() {
+      const txt = this.state.jsonModal.text;
+      const parsed = safeJsonParse(txt, null);
+      if (!Array.isArray(parsed)) {
+        this.setState({ jsonModal: Object.assign({}, this.state.jsonModal, { error: t('Paste a JSON array of devices here.') }) });
+        return;
+      }
+      const devices = normalizeDevices(parsed);
+      this.setState({ devices }, () => {
+        this.markChanged();
+        this.closeJsonModal();
+      });
+    }
+
+    renderStatusBadge(label, value) {
+      let text;
+      if (value === null) text = t('Unknown');
+      else text = value ? t('Connected') : t('Disconnected');
+
+      return h('span', { className: 'nexo-badge', style: { marginLeft: '6px' } }, `${label}: ${text}`);
+    }
+
+    renderTabs() {
+      const tabBtn = (id, label) => {
+        const isActive = this.state.activeTab === id;
+        return h(
+          'button',
+          {
+            type: 'button',
+            className: `nexo-tab ${isActive ? 'active' : ''}`,
+            onClick: () => this.setActiveTab(id),
+          },
+          label
+        );
+      };
+
+      return h('div', { className: 'nexo-tabs' }, [
+        tabBtn('general', t('General')),
+        tabBtn('devices', t('Devices')),
+      ]);
+    }
+
+    renderGeneralTab() {
+      const g = this.state.global || {};
+      const input = (label, field, type, help) =>
+        h('div', { className: 'nexo-field' }, [
+          h('label', { className: 'nexo-label' }, label),
+          h('input', {
+            className: 'nexo-input',
+            type: type || 'number',
+            value: g[field] !== undefined && g[field] !== null ? String(g[field]) : '',
+            onChange: ev => this.updateGlobalField(field, ev.target.value),
+          }),
+          help ? h('div', { className: 'nexo-help' }, help) : null,
+        ]);
+
+      return h('div', { className: 'nexo-card' }, [
+        h('h6', null, t('Global settings')),
+        input(t('Poll interval (ms)'), 'pollIntervalMs', 'number'),
+        input(t('Modbus timeout (ms)'), 'modbusTimeoutMs', 'number'),
+        input(t('Register address offset'), 'registerAddressOffset', 'number'),
+      ]);
+    }
+
+    renderDevicesTable() {
+      const devices = normalizeDevices(this.state.devices);
+
+      const rows = devices.map((d, idx) => {
+        const tpl = (this.state.templatesById || {})[d.templateId] || {};
+        return h('tr', { key: `${d.id || idx}` }, [
+          h('td', null, h('input', {
+            type: 'checkbox',
+            checked: !!d.enabled,
+            onChange: ev => {
+              const list = normalizeDevices(this.state.devices);
+              list[idx] = Object.assign({}, list[idx], { enabled: !!ev.target.checked });
+              this.setState({ devices: list }, () => this.markChanged());
+            },
+          })),
+          h('td', null, String(d.id || '')),
+          h('td', null, String(d.name || tpl.name || '')),
+          h('td', null, String(d.category || '')),
+          h('td', null, String(d.manufacturer || '')),
+          h('td', null, String(d.templateId || '')),
+          h('td', null, String(d.protocol || '')),
+          h('td', null,
+            h('div', { className: 'nexo-actions' }, [
+              h('button', { type: 'button', className: 'nexo-btn', onClick: () => this.openDeviceModal('edit', idx) }, t('Edit device')),
+              h('button', { type: 'button', className: 'nexo-btn danger', onClick: () => this.deleteDevice(idx) }, t('Delete')),
+            ])
+          ),
+        ]);
+      });
+
+      return h('div', { className: 'nexo-card' }, [
+        h('div', { className: 'nexo-devices-header' }, [
+          h('h6', null, t('Device list')),
+          h('div', { className: 'nexo-actions' }, [
+            h('button', { type: 'button', className: 'nexo-btn primary', onClick: () => this.openDeviceModal('add', -1) }, t('Add device')),
+            h('button', { type: 'button', className: 'nexo-btn', onClick: () => this.openJsonModal('import') }, t('Import JSON')),
+            h('button', { type: 'button', className: 'nexo-btn', onClick: () => this.openJsonModal('export') }, t('Export JSON')),
+          ]),
+        ]),
+        devices.length === 0
+          ? h('div', { className: 'nexo-muted' }, t('No devices configured yet.'))
+          : h('table', { className: 'striped responsive-table' }, [
+            h('thead', null, h('tr', null, [
+              h('th', null, t('Enabled')),
+              h('th', null, t('Device ID')),
+              h('th', null, t('Name')),
+              h('th', null, t('Category')),
+              h('th', null, t('Manufacturer')),
+              h('th', null, t('Template')),
+              h('th', null, t('Protocol')),
+              h('th', null, t('Actions')),
+            ])),
+            h('tbody', null, rows),
+          ]),
+      ]);
+    }
+
+    renderDevicesTab() {
+      return h('div', null, this.renderDevicesTable());
+    }
+
+    renderDeviceModal() {
+      const modal = this.state.deviceModal;
+      if (!modal.open || !modal.draft) return null;
+
+      const d = modal.draft;
+      const tpl = (this.state.templatesById || {})[d.templateId] || null;
+      const availableProtocols = (tpl && Array.isArray(tpl.protocols) && tpl.protocols.length) ? tpl.protocols : (d.protocol ? [d.protocol] : []);
+
+      const categories = this.state.categories || [];
+      const mans = (this.state.manufacturersByCategory && this.state.manufacturersByCategory[d.category]) || [];
+      const tpls = (((this.state.templatesByCatMan || {})[d.category] || {})[d.manufacturer]) || [];
+
+      const field = (label, value, onChange, type, placeholder) =>
+        h('div', { className: 'nexo-field' }, [
+          h('label', { className: 'nexo-label' }, label),
+          h('input', {
+            className: 'nexo-input',
+            type: type || 'text',
+            value: value !== undefined && value !== null ? String(value) : '',
+            placeholder: placeholder || '',
+            onChange: ev => onChange(ev.target.value),
+          }),
+        ]);
+
+      const numberField = (label, value, onChange, placeholder) =>
+        field(label, value, onChange, 'number', placeholder);
+
+      const checkboxField = (label, checked, onChange) =>
+        h('div', { className: 'nexo-field' }, [
+          h('label', { className: 'nexo-label' }, label),
+          h('label', { className: 'nexo-checkbox' }, [
+            h('input', { type: 'checkbox', checked: !!checked, onChange: ev => onChange(!!ev.target.checked) }),
+            h('span', null, ''),
+          ]),
+        ]);
+
+      const selectField = (label, value, options, onChange) =>
+        h('div', { className: 'nexo-field' }, [
+          h('label', { className: 'nexo-label' }, label),
+          h('select', { className: 'nexo-select', value: value || '', onChange: ev => onChange(ev.target.value) },
+            options.map(o => h('option', { key: String(o.value || o), value: String(o.value || o) }, String(o.label || o)))
+          ),
+        ]);
+
+      const protocolField = () => selectField(
+        t('Protocol'),
+        d.protocol,
+        availableProtocols.map(p => ({ value: p, label: p })),
+        v => this.updateDraftField('protocol', v)
+      );
+
+      const templateField = () => selectField(
+        t('Template'),
+        d.templateId,
+        tpls.map(o => ({ value: o.id, label: `${o.name} (${o.id})` })),
+        v => this.updateDraftField('templateId', v)
+      );
+
+      const categoryField = () => selectField(
+        t('Category'),
+        d.category,
+        categories.map(c => ({ value: c, label: c })),
+        v => {
+          // When changing category, also reset manufacturer and template
+          const mans2 = (this.state.manufacturersByCategory && this.state.manufacturersByCategory[v]) || [];
+          const man2 = mans2[0] || '';
+          const tpls2 = (((this.state.templatesByCatMan || {})[v] || {})[man2]) || [];
+          const tpl2 = (tpls2[0] && tpls2[0].id) || '';
+          const tplObj = (this.state.templatesById || {})[tpl2];
+          const proto = normalizeProtocolForTemplate(tplObj, tplObj && tplObj.protocols && tplObj.protocols[0]);
+          const draft = Object.assign({}, d, {
+            category: v,
+            manufacturer: man2,
+            templateId: tpl2,
+            protocol: proto,
+            id: d.id || suggestId(categoryPrefix(v), normalizeDevices(this.state.devices)),
+            name: (tplObj && tplObj.name) ? tplObj.name : d.name,
+            connection: Object.assign(defaultConnection(proto), (d.connection || {})),
+          });
+          this.setState({ deviceModal: Object.assign({}, modal, { draft }) });
+        }
+      );
+
+      const manufacturerField = () => selectField(
+        t('Manufacturer'),
+        d.manufacturer,
+        mans.map(m => ({ value: m, label: m })),
+        v => {
+          const tpls2 = (((this.state.templatesByCatMan || {})[d.category] || {})[v]) || [];
+          const tpl2 = (tpls2[0] && tpls2[0].id) || '';
+          this.setState({ deviceModal: Object.assign({}, modal, { draft: Object.assign({}, d, { manufacturer: v, templateId: tpl2 }) }) }, () => {
+            this.updateDraftField('templateId', tpl2);
+          });
+        }
+      );
+
+      const connectionFields = () => {
+        const c = d.connection || {};
+        if (d.protocol === 'modbusTcp') {
+          return h('div', null, [
+            h('h6', null, t('Modbus TCP connection')),
+            field(t('Host/IP'), c.host, v => this.updateDraftField('connection.host', v)),
+            numberField(t('Port'), c.port, v => this.updateDraftField('connection.port', v)),
+            numberField(t('Unit ID'), c.unitId, v => this.updateDraftField('connection.unitId', v)),
+            numberField(t('Timeout (ms)'), c.timeoutMs, v => this.updateDraftField('connection.timeoutMs', v)),
+            numberField(t('Addr offset'), c.addressOffset, v => this.updateDraftField('connection.addressOffset', v)),
+            field(t('Word order'), c.wordOrder, v => this.updateDraftField('connection.wordOrder', v)),
+            field(t('Byte order'), c.byteOrder, v => this.updateDraftField('connection.byteOrder', v)),
+            field(t('Write password (optional)'), '', v => this.updateDraftField('connection.writePassword', v), 'password'),
+          ]);
+        }
+        if (d.protocol === 'modbusRtu' || d.protocol === 'modbusAscii') {
+          return h('div', null, [
+            h('h6', null, t('Serial port')),
+            field(t('Serial port'), c.path, v => this.updateDraftField('connection.path', v), 'text', '/dev/ttyUSB0'),
+            numberField(t('Baud rate'), c.baudRate, v => this.updateDraftField('connection.baudRate', v)),
+            field(t('Parity'), c.parity, v => this.updateDraftField('connection.parity', v)),
+            numberField(t('Data bits'), c.dataBits, v => this.updateDraftField('connection.dataBits', v)),
+            numberField(t('Stop bits'), c.stopBits, v => this.updateDraftField('connection.stopBits', v)),
+            numberField(t('Unit ID'), c.unitId, v => this.updateDraftField('connection.unitId', v)),
+            numberField(t('Timeout (ms)'), c.timeoutMs, v => this.updateDraftField('connection.timeoutMs', v)),
+            numberField(t('Addr offset'), c.addressOffset, v => this.updateDraftField('connection.addressOffset', v)),
+            field(t('Word order'), c.wordOrder, v => this.updateDraftField('connection.wordOrder', v)),
+            field(t('Byte order'), c.byteOrder, v => this.updateDraftField('connection.byteOrder', v)),
+            field(t('Write password (optional)'), '', v => this.updateDraftField('connection.writePassword', v), 'password'),
+          ]);
+        }
+        if (d.protocol === 'mbus') {
+          return h('div', null, [
+            h('h6', null, t('M-Bus connection')),
+            field(t('Serial port'), c.path, v => this.updateDraftField('connection.path', v), 'text', '/dev/ttyUSB0'),
+            numberField(t('Baud rate'), c.baudRate, v => this.updateDraftField('connection.baudRate', v)),
+            field(t('Parity'), c.parity, v => this.updateDraftField('connection.parity', v)),
+            numberField(t('Data bits'), c.dataBits, v => this.updateDraftField('connection.dataBits', v)),
+            numberField(t('Stop bits'), c.stopBits, v => this.updateDraftField('connection.stopBits', v)),
+            numberField(t('Unit ID'), c.unitId, v => this.updateDraftField('connection.unitId', v)),
+            numberField(t('Timeout (ms)'), c.timeoutMs, v => this.updateDraftField('connection.timeoutMs', v)),
+            checkboxField(t('Send NKE'), c.sendNke, v => this.updateDraftField('connection.sendNke', v)),
+          ]);
+        }
+        if (d.protocol === 'mqtt') {
+          return h('div', null, [
+            h('h6', null, t('MQTT connection')),
+            field(t('Broker URL'), c.url, v => this.updateDraftField('connection.url', v), 'text', 'mqtt://host:1883'),
+            field(t('Username'), c.username, v => this.updateDraftField('connection.username', v)),
+            field(t('Password'), '', v => this.updateDraftField('connection.password', v), 'password'),
+          ]);
+        }
+        if (d.protocol === 'http') {
+          return h('div', null, [
+            h('h6', null, t('HTTP connection')),
+            field(t('Base URL'), c.baseUrl, v => this.updateDraftField('connection.baseUrl', v), 'text', 'https://device/api'),
+            field(t('Username'), c.username, v => this.updateDraftField('connection.username', v)),
+            field(t('Password'), '', v => this.updateDraftField('connection.password', v), 'password'),
+            field(t('Meter ID (optional)'), c.meterId, v => this.updateDraftField('connection.meterId', v)),
+            checkboxField(t('Allow insecure TLS'), !!c.insecureTls, v => this.updateDraftField('connection.insecureTls', v)),
+          ]);
+        }
+        if (d.protocol === 'udp') {
+          return h('div', null, [
+            h('h6', null, t('UDP connection')),
+            field(t('Host/IP'), c.host, v => this.updateDraftField('connection.host', v)),
+            numberField(t('Port'), c.port, v => this.updateDraftField('connection.port', v)),
+            numberField(t('Timeout (ms)'), c.timeoutMs, v => this.updateDraftField('connection.timeoutMs', v)),
+            numberField(t('Command pause (ms)'), c.commandPauseMs, v => this.updateDraftField('connection.commandPauseMs', v)),
+          ]);
+        }
+        if (d.protocol === 'speedwire') {
+          return h('div', null, [
+            h('h6', null, t('Speedwire connection')),
+            field(t('Filter host (optional)'), c.filterHost, v => this.updateDraftField('connection.filterHost', v)),
+            field(t('Multicast group'), c.multicastGroup, v => this.updateDraftField('connection.multicastGroup', v)),
+            numberField(t('Port'), c.port, v => this.updateDraftField('connection.port', v)),
+            field(t('Interface address (optional)'), c.interfaceAddress, v => this.updateDraftField('connection.interfaceAddress', v)),
+            numberField(t('Stale timeout (ms)'), c.staleTimeoutMs, v => this.updateDraftField('connection.staleTimeoutMs', v)),
+          ]);
+        }
+        if (d.protocol === 'onewire') {
+          return h('div', null, [
+            h('h6', null, t('1-Wire connection')),
+            field(t('Base path'), c.basePath, v => this.updateDraftField('connection.basePath', v)),
+            field(t('Sensor ID'), c.sensorId, v => this.updateDraftField('connection.sensorId', v)),
+            field(t('File'), c.file, v => this.updateDraftField('connection.file', v)),
+            field(t('Parser'), c.parser, v => this.updateDraftField('connection.parser', v)),
+          ]);
+        }
+        if (d.protocol === 'canbus') {
+          return h('div', null, [
+            h('h6', null, t('CANbus connection')),
+            field(t('Interface'), c.interface, v => this.updateDraftField('connection.interface', v)),
+            field(t('candump args'), c.candumpArgs, v => this.updateDraftField('connection.candumpArgs', v)),
+            field(t('candump path'), c.candumpPath, v => this.updateDraftField('connection.candumpPath', v)),
+            field(t('cansend path'), c.cansendPath, v => this.updateDraftField('connection.cansendPath', v)),
+          ]);
+        }
+        return null;
+      };
+
+      return h('div', { className: 'nexo-modal-backdrop' }, [
+        h('div', { className: 'nexo-modal' }, [
+          h('div', { className: 'nexo-modal-header' }, [
+            h('h5', null, modal.mode === 'edit' ? t('Edit device') : t('Add device')),
+            h('button', { type: 'button', className: 'nexo-btn', onClick: () => this.closeDeviceModal() }, t('Close')),
+          ]),
+
+          modal.errors && modal.errors.length
+            ? h('div', { className: 'nexo-error' }, [
+              h('div', { style: { fontWeight: '600', marginBottom: '6px' } }, t('Validation error')),
+              h('ul', null, modal.errors.map((e, i) => h('li', { key: `err${i}` }, e))),
+            ])
+            : null,
+
+          checkboxField(t('Device enabled'), !!d.enabled, v => this.updateDraftField('enabled', v)),
+          field(t('Device ID'), d.id, v => this.updateDraftField('id', v)),
+          field(t('Name'), d.name, v => this.updateDraftField('name', v)),
+          categoryField(),
+          manufacturerField(),
+          templateField(),
+          protocolField(),
+          numberField(t('Poll interval (ms, optional)'), d.pollIntervalMs, v => this.updateDraftField('pollIntervalMs', v)),
+          numberField(t('Heartbeat timeout (ms, optional)'), d.heartbeatTimeoutMs, v => this.updateDraftField('heartbeatTimeoutMs', v)),
+          h('div', { className: 'nexo-divider' }),
+          connectionFields(),
+          h('div', { className: 'nexo-modal-actions' }, [
+            h('button', { type: 'button', className: 'nexo-btn', onClick: () => this.closeDeviceModal() }, t('Cancel')),
+            h('button', { type: 'button', className: 'nexo-btn primary', onClick: () => this.saveDeviceFromModal() }, t('Save')),
+          ]),
+        ]),
+      ]);
+    }
+
+    renderJsonModal() {
+      const jm = this.state.jsonModal;
+      if (!jm.open) return null;
+
+      const title = jm.mode === 'export' ? t('JSON export') : t('JSON import');
+      const hint = jm.mode === 'export'
+        ? t('Copy the JSON below (passwords are masked).')
+        : t('Paste a JSON array of devices here.');
+
+      const footerButtons = jm.mode === 'export'
+        ? [
+          h('button', { type: 'button', className: 'nexo-btn', onClick: () => this.closeJsonModal() }, t('Close')),
+        ]
+        : [
+          h('button', { type: 'button', className: 'nexo-btn', onClick: () => this.closeJsonModal() }, t('Cancel')),
+          h('button', { type: 'button', className: 'nexo-btn primary', onClick: () => this.applyJsonImport() }, t('Apply')),
+        ];
+
+      return h('div', { className: 'nexo-modal-backdrop' }, [
+        h('div', { className: 'nexo-modal' }, [
+          h('div', { className: 'nexo-modal-header' }, [
+            h('h5', null, title),
+            h('button', { type: 'button', className: 'nexo-btn', onClick: () => this.closeJsonModal() }, t('Close')),
+          ]),
+          h('div', { className: 'nexo-hint' }, hint),
+          jm.error ? h('div', { className: 'nexo-error' }, jm.error) : null,
+          h('textarea', {
+            className: 'nexo-textarea',
+            value: jm.text,
+            onChange: ev => this.setState({ jsonModal: Object.assign({}, jm, { text: ev.target.value, error: null }) }),
+            rows: 18,
+          }),
+          h('div', { className: 'nexo-modal-actions' }, footerButtons),
+        ]),
+      ]);
+    }
+
+    render() {
+      const status = this.state.status || {};
+      const inst = getInstanceId();
+
+      return h('div', { className: 'container' }, [
+        h('div', { className: 'card nexo-header' }, [
+          h('div', { className: 'card-content' }, [
+            h('div', { className: 'nexo-header-row' }, [
+              h('div', null, [
+                h('div', { style: { display: 'flex', alignItems: 'center', gap: '10px' } }, [
+                  h('img', { src: 'energy-bridge.svg', className: 'nexo-icon', alt: 'EnergyBridge' }),
+                  h('div', null, [
+                    h('div', { className: 'nexo-title' }, 'EnergyBridge'),
+                    h('div', { className: 'nexo-subtitle nexo-muted' }, t('Community multi-protocol adapter with templates for energy devices (Modbus TCP/RTU, MQTT, HTTP/JSON, UDP).')),
+                  ]),
+                ]),
+              ]),
+              h('div', { className: 'nexo-meta' }, [
+                h('div', null, `${t('Instance')}: ${inst}`),
+                h('div', null, [
+                  this.renderStatusBadge(t('Alive'), status.alive),
+                  this.renderStatusBadge(t('Connection'), status.connection),
+                ]),
+              ]),
+            ]),
+            this.renderTabs(),
+          ]),
+        ]),
+
+        this.state.error ? h('div', { className: 'nexo-error' }, this.state.error) : null,
+
+        this.state.activeTab === 'general' ? this.renderGeneralTab() : this.renderDevicesTab(),
+
+        this.renderDeviceModal(),
+        this.renderJsonModal(),
+      ]);
+    }
+  }
+
+  function mount() {
+    const root = document.getElementById('root');
+    if (!root) return;
+
+    const app = ReactDOM.render(h(EnergyBridgeAdmin, null), root);
+
+    // Expose hooks for admin load/save
+    window.__energyBridgeApp = app;
+  }
+
+  // Admin integration (adapter-settings.js)
+  window.load = function (settings, onChange) {
+    if (window.__energyBridgeApp && typeof window.__energyBridgeApp.setLoadedSettings === 'function') {
+      window.__energyBridgeApp.setLoadedSettings(settings, onChange);
+    } else {
+      window.__energyBridgePendingSettings = settings;
+      window.__energyBridgePendingOnChange = onChange;
+    }
+
+    if (typeof onChange === 'function') onChange(false);
+  };
+
+  window.save = function (callback) {
+    if (window.__energyBridgeApp && typeof window.__energyBridgeApp.getSaveConfig === 'function') {
+      callback(window.__energyBridgeApp.getSaveConfig());
+    } else {
+      callback({});
+    }
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', mount);
+  } else {
+    mount();
+  }
+})();

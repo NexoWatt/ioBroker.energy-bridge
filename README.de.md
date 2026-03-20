@@ -32,6 +32,6 @@ Unterstützte Protokolle (abhängig vom Template): **Modbus TCP/RTU/ASCII**, **M
 1. Adapter über die ioBroker‑Adapterliste installieren.
 2. Instanz anlegen und die Konfiguration in Admin öffnen.
 3. Im Tab **Allgemein** Poll‑Intervall/Timeouts anpassen.
-4. Im Tab **Geräte** über **Gerät hinzufügen** Geräte anlegen (Kategorie → Hersteller → Template) und Verbindung/Protokoll konfigurieren.
+4. Im Tab **Geräte** Geräte über den Template‑Wizard hinzufügen (**Kategorie → Hersteller → Template**).
+5. Optional kannst du **Import/Export** nutzen, um die Geräte‑Liste zu sichern oder zu migrieren.
 
-Die Geräte‑Liste wird intern im nativen Konfigurationsfeld `devicesJson` (verschlüsselt) gespeichert und basiert auf den Template‑Definitionen aus `admin/templates.json`.

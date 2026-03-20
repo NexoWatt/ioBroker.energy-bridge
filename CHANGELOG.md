@@ -4,9 +4,16 @@
 
 - (nothing yet)
 
+
+## 0.1.11 (2026-03-20)
+
+- Admin UI migrated to a React-based configuration page (device selection wizard restored).
+- Version bump.
+
+
 ## 0.1.10 (2026-03-20)
 
-- Admin UI: switch back to the device wizard (Materialize) so devices can be selected/edited again.
+- Admin UI migrated to a React-based configuration page (device selection wizard restored).
 
 ## 0.1.9 (2026-03-19)
 

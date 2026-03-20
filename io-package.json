@@ -1,8 +1,21 @@
 {
   "common": {
     "name": "energy-bridge",
-    "version": "0.1.10",
+    "version": "0.1.11",
     "news": {
+      "0.1.11": {
+        "en": "Admin UI migrated to React (restored device selection wizard).",
+        "de": "Admin-UI auf React umgestellt (Geräte-Auswahl wiederhergestellt).",
+        "ru": "Admin UI migrated to React (restored device selection wizard).",
+        "pt": "Admin UI migrated to React (restored device selection wizard).",
+        "nl": "Admin UI migrated to React (restored device selection wizard).",
+        "fr": "Admin UI migrated to React (restored device selection wizard).",
+        "it": "Admin UI migrated to React (restored device selection wizard).",
+        "es": "Admin UI migrated to React (restored device selection wizard).",
+        "pl": "Admin UI migrated to React (restored device selection wizard).",
+        "uk": "Admin UI migrated to React (restored device selection wizard).",
+        "zh-cn": "Admin UI migrated to React (restored device selection wizard)."
+      },
       "0.1.9": {
         "en": "Fix: add missing Admin i18n translation files and JSON config layout sizes (repository-checker compliance).",
         "de": "Fix: Fehlende Admin-i18n-Übersetzungsdateien und JSON-Config-Layoutgrößen ergänzt (Repository-Checker-Konformität).",
@@ -80,19 +93,6 @@
         "pl": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
         "uk": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations).",
         "zh-cn": "Maintenance release: align metadata with ioBroker recommendations (Node.js >=20, updated dependencies, protectedNative, translations)."
-      },
-      "0.1.10": {
-        "en": "Admin UI: switch back to the device wizard (Materialize) for selecting templates and connections.",
-        "de": "Admin UI: Zurück zum Geräte-Wizard (Materialize) für Template- und Verbindungs-Auswahl.",
-        "ru": "Admin UI: switch back to the device wizard (Materialize) for selecting templates and connections.",
-        "pt": "Admin UI: switch back to the device wizard (Materialize) for selecting templates and connections.",
-        "nl": "Admin UI: switch back to the device wizard (Materialize) for selecting templates and connections.",
-        "fr": "Admin UI: switch back to the device wizard (Materialize) for selecting templates and connections.",
-        "it": "Admin UI: switch back to the device wizard (Materialize) for selecting templates and connections.",
-        "es": "Admin UI: switch back to the device wizard (Materialize) for selecting templates and connections.",
-        "pl": "Admin UI: switch back to the device wizard (Materialize) for selecting templates and connections.",
-        "uk": "Admin UI: switch back to the device wizard (Materialize) for selecting templates and connections.",
-        "zh-cn": "Admin UI: switch back to the device wizard (Materialize) for selecting templates and connections."
       }
     },
     "titleLang": {

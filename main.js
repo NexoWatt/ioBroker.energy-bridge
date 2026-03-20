@@ -106,16 +106,8 @@ class EnergyBridgeAdapter extends utils.Adapter {
 
     this.templateRegistry = readTemplates(this);
 
-    // parse devices config (supports both stringified JSON and array/object formats)
-    const devicesCfgRaw = this.config.devicesJson;
-    let devicesCfg;
-    if (Array.isArray(devicesCfgRaw)) {
-      devicesCfg = devicesCfgRaw;
-    } else if (typeof devicesCfgRaw === 'string') {
-      devicesCfg = safeJsonParse(devicesCfgRaw || '[]', []);
-    } else {
-      devicesCfg = [];
-    }
+    // parse devices config
+    const devicesCfg = safeJsonParse(this.config.devicesJson || '[]', []);
     const devices = Array.isArray(devicesCfg) ? devicesCfg : [];
 
     const globalConfig = {

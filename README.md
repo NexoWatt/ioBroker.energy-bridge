@@ -42,12 +42,10 @@ For a German version of this documentation, see `README.de.md`.
 
 1. Install the adapter via the ioBroker adapter list.
 2. Create an instance and open its configuration in Admin UI.
-3. In **Global settings**, adjust polling interval/timeouts as required.
-4. In **Devices**, click **Add device** and select **Category → Manufacturer → Template**.
-5. Configure the transport/protocol (for example **Modbus TCP**) and the connection parameters, then save the device.
-6. Save the instance settings and restart the instance.
+3. In the **General** tab, adjust polling interval/timeouts as required.
+4. In the **Devices** tab, add devices using the template wizard (**Category → Manufacturer → Template**).
+5. Optionally use **Import/Export** to back up or migrate your device list.
 
-The device list is stored in the native configuration field `devicesJson` (encrypted) and is based on the template definitions from `admin/templates.json`.
 
 ## Notes
 
@@ -59,10 +57,9 @@ It uses the libraries [modbus-serial](https://www.npmjs.com/package/modbus-seria
 ## Changelog
 
 
-### 0.1.10 (2026-03-20)
+### 0.1.11 (2026-03-20)
 
-- (Nexowatt) Admin UI: switch back to the device wizard (Materialize) so devices can be selected/edited again.
-
+- (Nexowatt) Admin UI migrated to React (restored device selection wizard).
 
 ### 0.1.9 (2026-03-19)
 
